@@ -12,7 +12,7 @@ const Admin = () => {
     const connected = useQuasarStore((s) => s.wallet.connected)
     const publicKey = useQuasarStore((s) => s.wallet.current?.publicKey)
 
-    async function test() {
+    async function testCreateAccount() {
         const connection = new Connection("https://mango.devnet.rpcpool.com", 'singleGossip');
 
         console.log("test")
@@ -54,15 +54,74 @@ const Admin = () => {
         }
     }
 
+    async function testInitializeMint() {
+        const connection = new Connection("https://mango.devnet.rpcpool.com", 'singleGossip');
+
+        console.log("test")
+
+        const groupName = 'devnet.2'
+        const cluster = 'devnet' as Cluster
+        const config = new Config(configFile)
+        const groupIds = config.getGroup(cluster, groupName)
+
+        if (!groupIds) {
+            throw new Error(`Group ${groupName} not found`)
+        }
+        const quasarProgramId = 'rDcBAK5ozkRwJC5bgM8rwtMjjW6oZPBmzgV6jUu9QJf'
+        const mangoProgramId = groupIds.mangoProgramId
+        const systemProgramId = SystemProgram.programId
+        const tokenProgramId = TOKEN_PROGRAM_ID
+        const rentProgramId = SYSVAR_RENT_PUBKEY
+
+        const payer = new Account(
+            [32, 200, 206, 106, 153, 231, 232, 130, 250, 66, 207, 147, 149, 21, 133, 157, 38, 34, 218, 61, 182, 104, 55, 200, 233, 242, 152, 109, 204, 175, 200, 92, 27, 227, 114, 155, 125, 10, 36, 159, 242, 75, 189, 199, 203, 7, 205, 195, 20, 13, 60, 85, 136, 231, 255, 20, 80, 105, 245, 100, 182, 90, 248, 241]);
+        const newAccount = new Account();
+
+        // let [
+        //     program_ai,
+        //     signer_ai,
+        //     mint_ai,        // write
+        //     token_program_ai,
+        //     system_program_ai,
+        // ] = accounts;
+
+        const instruction = new TransactionInstruction({
+            programId: new PublicKey(quasarProgramId),
+            keys: [
+                { pubkey: new PublicKey(quasarProgramId), isSigner: false, isWritable: false },
+                { pubkey: payer.publicKey, isSigner: true, isWritable: false },
+                { pubkey: newAccount.publicKey, isSigner: false, isWritable: true },
+                { pubkey: tokenProgramId, isSigner: false, isWritable: false },
+                { pubkey: systemProgramId, isSigner: false, isWritable: false },
+                { pubkey: rentProgramId, isSigner: false, isWritable: false },
+            ],
+            data: Buffer.from(Uint8Array.of(6, 0, 0, 0))
+        })
+
+        try {
+            const tx = new Transaction().add(instruction);
+            console.log("tx sig: ", await connection.sendTransaction(tx, [payer, newAccount], { skipPreflight: false, preflightCommitment: 'singleGossip' }));
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
     return (
         <>
             <div>
                 Admin page
 
                 <div>
-                    <button onClick={() => test()}
+                    <button onClick={() => testCreateAccount()}
                     >
-                        test
+                        test create account
+                    </button>
+                </div>
+
+                <div>
+                    <button onClick={() => testInitializeMint()}
+                    >
+                        test create and initialize mint
                     </button>
                 </div>
             </div>
