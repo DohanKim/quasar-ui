@@ -84,7 +84,7 @@ export function makeAddLeverageTokenInstruction(
     { isSigner: false, isWritable: false, pubkey: baseTokenMintPk },
     { isSigner: false, isWritable: false, pubkey: mangoProgramPk },
     { isSigner: false, isWritable: false, pubkey: mangoGroupPk },
-    { isSigner: false, isWritable: false, pubkey: mangoAccountPk },
+    { isSigner: false, isWritable: true, pubkey: mangoAccountPk },
     { isSigner: false, isWritable: false, pubkey: mangoPerpMarketPk },
     { isSigner: false, isWritable: false, pubkey: SystemProgram.programId },
     { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },

@@ -377,15 +377,9 @@ export class QuasarClient {
       MangoAccountLayout.span,
       mangoProgram,
     )
+    console.log(mangoAccountInstruction.keypair.publicKey.toString())
 
-    const [pda, _] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from('leverage_token'),
-        mangoAccountInstruction.keypair.publicKey.toBuffer(),
-      ],
-      this.programId,
-    )
-
+    const quasarGroup = await this.getQuasarGroup(quasarGroupPk)
     const addLeverageTokenInstruction = makeAddLeverageTokenInstruction(
       this.programId,
       quasarGroupPk,
@@ -396,7 +390,7 @@ export class QuasarClient {
       mangoAccountInstruction.keypair.publicKey,
       mangoPerpMarket,
       admin.publicKey,
-      pda,
+      quasarGroup.signerKey,
       targetLeverage,
     )
 
