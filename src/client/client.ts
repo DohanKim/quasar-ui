@@ -9,8 +9,8 @@ import {
   Transaction,
   TransactionConfirmationStatus,
   TransactionSignature,
-} from '@solana/web3.js';
-import BN from 'bn.js';
+} from '@solana/web3.js'
+import BN from 'bn.js'
 import {
   awaitTransactionSignatureConfirmation,
   createAccountInstruction,
@@ -20,35 +20,38 @@ import {
   sleep,
   zeroKey,
   ZERO_BN,
-} from './utils';
-import { QuasarGroupLayout, StubOracleLayout } from './layout';
-import { makeInitQuasarGroupInstruction } from './instruction';
+} from './utils'
+import { QuasarGroupLayout, StubOracleLayout } from './layout'
+import {
+  makeInitQuasarGroupInstruction,
+  makeAddBaseTokenInstruction,
+} from './instruction'
 // import { I80F48, ZERO_I80F48 } from '@blockworks-foundation/quasar-client';
 
-import { WalletAdapter } from '../@types/types';
+import { WalletAdapter } from '../@types/types'
 import {
   closeAccount,
   initializeAccount,
   WRAPPED_SOL_MINT,
-} from '@project-serum/serum/lib/token-instructions';
+} from '@project-serum/serum/lib/token-instructions'
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
   TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
-import QuasarGroup from './QuasarGroup';
+} from '@solana/spl-token'
+import QuasarGroup from './QuasarGroup'
 
 export const getUnixTs = () => {
-  return new Date().getTime() / 1000;
-};
+  return new Date().getTime() / 1000
+}
 
 export class QuasarClient {
-  connection: Connection;
-  programId: PublicKey;
+  connection: Connection
+  programId: PublicKey
 
   constructor(connection: Connection, programId: PublicKey) {
-    this.connection = connection;
-    this.programId = programId;
+    this.connection = connection
+    this.programId = programId
   }
 
   async sendTransactions(
@@ -68,23 +71,23 @@ export class QuasarClient {
           confirmLevel
         )
       )
-    );
+    )
   }
 
   async signTransaction({ transaction, payer, signers }) {
     transaction.recentBlockhash = (
       await this.connection.getRecentBlockhash()
-    ).blockhash;
-    transaction.setSigners(payer.publicKey, ...signers.map((s) => s.publicKey));
+    ).blockhash
+    transaction.setSigners(payer.publicKey, ...signers.map((s) => s.publicKey))
     if (signers.length > 0) {
-      transaction.partialSign(...signers);
+      transaction.partialSign(...signers)
     }
 
     if (payer?.connected) {
-      console.log('signing as wallet', payer.publicKey);
-      return await payer.signTransaction(transaction);
+      console.log('signing as wallet', payer.publicKey)
+      return await payer.signTransaction(transaction)
     } else {
-      transaction.sign(...[payer].concat(signers));
+      transaction.sign(...[payer].concat(signers))
     }
   }
 
@@ -93,31 +96,31 @@ export class QuasarClient {
     payer,
   }: {
     transactionsAndSigners: {
-      transaction: Transaction;
-      signers?: Array<Account>;
-    }[];
-    payer: Account | WalletAdapter;
+      transaction: Transaction
+      signers?: Array<Account>
+    }[]
+    payer: Account | WalletAdapter
   }) {
     const blockhash = (await this.connection.getRecentBlockhash('max'))
-      .blockhash;
+      .blockhash
     transactionsAndSigners.forEach(({ transaction, signers = [] }) => {
-      transaction.recentBlockhash = blockhash;
+      transaction.recentBlockhash = blockhash
       transaction.setSigners(
         payer.publicKey,
         ...signers.map((s) => s.publicKey)
-      );
+      )
       if (signers?.length > 0) {
-        transaction.partialSign(...signers);
+        transaction.partialSign(...signers)
       }
-    });
+    })
     if (!(payer instanceof Account)) {
       return await payer.signAllTransactions(
         transactionsAndSigners.map(({ transaction }) => transaction)
-      );
+      )
     } else {
       transactionsAndSigners.forEach(({ transaction, signers }) => {
-        transaction.sign(...[payer].concat(signers));
-      });
+        transaction.sign(...[payer].concat(signers))
+      })
     }
   }
 
@@ -134,41 +137,41 @@ export class QuasarClient {
       transaction,
       payer,
       signers: additionalSigners,
-    });
+    })
 
-    const rawTransaction = transaction.serialize();
-    const startTime = getUnixTs();
+    const rawTransaction = transaction.serialize()
+    const startTime = getUnixTs()
     if (postSignTxCallback) {
       try {
-        postSignTxCallback();
+        postSignTxCallback()
       } catch (e) {
-        console.log(`postSignTxCallback error ${e}`);
+        console.log(`postSignTxCallback error ${e}`)
       }
     }
     const txid: TransactionSignature = await this.connection.sendRawTransaction(
       rawTransaction,
       { skipPreflight: true }
-    );
+    )
 
     console.log(
       'Started awaiting confirmation for',
       txid,
       'size:',
       rawTransaction.length
-    );
+    )
 
-    let done = false;
-    (async () => {
+    let done = false
+    ;(async () => {
       // TODO - make sure this works well on mainnet
-      await sleep(1000);
+      await sleep(1000)
       while (!done && getUnixTs() - startTime < timeout / 1000) {
-        console.log(new Date().toUTCString(), ' sending tx ', txid);
+        console.log(new Date().toUTCString(), ' sending tx ', txid)
         this.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
-        });
-        await sleep(2000);
+        })
+        await sleep(2000)
       }
-    })();
+    })()
 
     try {
       await awaitTransactionSignatureConfirmation(
@@ -176,40 +179,40 @@ export class QuasarClient {
         timeout,
         this.connection,
         confirmLevel
-      );
+      )
     } catch (err) {
       if (err.timeout) {
-        throw new Error('Timed out awaiting confirmation on transaction');
+        throw new Error('Timed out awaiting confirmation on transaction')
       }
-      let simulateResult: SimulatedTransactionResponse | null = null;
+      let simulateResult: SimulatedTransactionResponse | null = null
       try {
         simulateResult = (
           await simulateTransaction(this.connection, transaction, 'processed')
-        ).value;
+        ).value
       } catch (e) {
-        console.warn('Simulate transaction failed');
+        console.warn('Simulate transaction failed')
       }
 
       if (simulateResult && simulateResult.err) {
         if (simulateResult.logs) {
           for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
-            const line = simulateResult.logs[i];
+            const line = simulateResult.logs[i]
             if (line.startsWith('Program log: ')) {
               throw new Error(
                 'Transaction failed: ' + line.slice('Program log: '.length)
-              );
+              )
             }
           }
         }
-        throw new Error(JSON.stringify(simulateResult.err));
+        throw new Error(JSON.stringify(simulateResult.err))
       }
-      throw new Error('Transaction failed');
+      throw new Error('Transaction failed')
     } finally {
-      done = true;
+      done = true
     }
 
     // console.log('Latency', txid, getUnixTs() - startTime);
-    return txid;
+    return txid
   }
 
   async sendSignedTransaction({
@@ -217,44 +220,44 @@ export class QuasarClient {
     timeout = 30000,
     confirmLevel = 'processed',
   }: {
-    signedTransaction: Transaction;
-    timeout?: number;
-    confirmLevel?: TransactionConfirmationStatus;
+    signedTransaction: Transaction
+    timeout?: number
+    confirmLevel?: TransactionConfirmationStatus
   }): Promise<string> {
-    const rawTransaction = signedTransaction.serialize();
-    const startTime = getUnixTs();
+    const rawTransaction = signedTransaction.serialize()
+    const startTime = getUnixTs()
 
     const txid: TransactionSignature = await this.connection.sendRawTransaction(
       rawTransaction,
       {
         skipPreflight: true,
       }
-    );
+    )
 
     // console.log('Started awaiting confirmation for', txid);
 
-    let done = false;
-    (async () => {
-      await sleep(500);
+    let done = false
+    ;(async () => {
+      await sleep(500)
       while (!done && getUnixTs() - startTime < timeout) {
         this.connection.sendRawTransaction(rawTransaction, {
           skipPreflight: true,
-        });
-        await sleep(500);
+        })
+        await sleep(500)
       }
-    })();
+    })()
     try {
       await awaitTransactionSignatureConfirmation(
         txid,
         timeout,
         this.connection,
         confirmLevel
-      );
+      )
     } catch (err) {
       if (err.timeout) {
-        throw new Error('Timed out awaiting confirmation on transaction');
+        throw new Error('Timed out awaiting confirmation on transaction')
       }
-      let simulateResult: SimulatedTransactionResponse | null = null;
+      let simulateResult: SimulatedTransactionResponse | null = null
       try {
         simulateResult = (
           await simulateTransaction(
@@ -262,30 +265,30 @@ export class QuasarClient {
             signedTransaction,
             'single'
           )
-        ).value;
+        ).value
       } catch (e) {
-        console.log('Simulate tx failed');
+        console.log('Simulate tx failed')
       }
       if (simulateResult && simulateResult.err) {
         if (simulateResult.logs) {
           for (let i = simulateResult.logs.length - 1; i >= 0; --i) {
-            const line = simulateResult.logs[i];
+            const line = simulateResult.logs[i]
             if (line.startsWith('Program log: ')) {
               throw new Error(
                 'Transaction failed: ' + line.slice('Program log: '.length)
-              );
+              )
             }
           }
         }
-        throw new Error(JSON.stringify(simulateResult.err));
+        throw new Error(JSON.stringify(simulateResult.err))
       }
-      throw new Error('Transaction failed');
+      throw new Error('Transaction failed')
     } finally {
-      done = true;
+      done = true
     }
 
     // console.log('Latency', txid, getUnixTs() - startTime);
-    return txid;
+    return txid
   }
 
   async initQuasarGroup(
@@ -297,17 +300,17 @@ export class QuasarClient {
       payer.publicKey,
       QuasarGroupLayout.span,
       this.programId
-    );
+    )
     const { signerKey, signerNonce } = await createSignerKeyAndNonce(
       this.programId,
       accountInstruction.account.publicKey
-    );
+    )
 
-    const createAccountsTransaction = new Transaction();
-    createAccountsTransaction.add(accountInstruction.instruction);
+    const createAccountsTransaction = new Transaction()
+    createAccountsTransaction.add(accountInstruction.instruction)
 
-    const signers = [accountInstruction.account];
-    await this.sendTransaction(createAccountsTransaction, payer, signers);
+    const signers = [accountInstruction.account]
+    await this.sendTransaction(createAccountsTransaction, payer, signers)
 
     const initQuasarGroupInstruction = makeInitQuasarGroupInstruction(
       this.programId,
@@ -316,21 +319,40 @@ export class QuasarClient {
       payer.publicKey,
       mangoProgram,
       new BN(signerNonce)
-    );
+    )
 
-    const initQuasarGroupTransaction = new Transaction();
-    initQuasarGroupTransaction.add(initQuasarGroupInstruction);
-    await this.sendTransaction(initQuasarGroupTransaction, payer, []);
+    const initQuasarGroupTransaction = new Transaction()
+    initQuasarGroupTransaction.add(initQuasarGroupInstruction)
+    await this.sendTransaction(initQuasarGroupTransaction, payer, [])
 
-    return accountInstruction.account.publicKey;
+    return accountInstruction.account.publicKey
   }
 
   async getQuasarGroup(quasarGroup: PublicKey): Promise<QuasarGroup> {
-    const accountInfo = await this.connection.getAccountInfo(quasarGroup);
+    const accountInfo = await this.connection.getAccountInfo(quasarGroup)
     const decoded = QuasarGroupLayout.decode(
       accountInfo == null ? undefined : accountInfo.data
-    );
+    )
 
-    return new QuasarGroup(quasarGroup, decoded);
+    return new QuasarGroup(quasarGroup, decoded)
+  }
+
+  async addBaseToken(
+    quasarGroupPk: PublicKey,
+    mintPk: PublicKey,
+    oraclePk: PublicKey,
+    admin: Account | WalletAdapter
+  ): Promise<TransactionSignature> {
+    const addBaseTokenInstruction = makeAddBaseTokenInstruction(
+      this.programId,
+      quasarGroupPk,
+      mintPk,
+      oraclePk,
+      admin.publicKey
+    )
+
+    const addBaseTokenTransaction = new Transaction()
+    addBaseTokenTransaction.add(addBaseTokenInstruction)
+    return await this.sendTransaction(addBaseTokenTransaction, admin, [])
   }
 }

@@ -7,7 +7,7 @@ import {
   AccountInfo,
   Commitment,
   Connection,
-  PublicKey,
+  PublicKey
 } from '@solana/web3.js';
 import { EndpointInfo, WalletAdapter } from '../@types/types';
 import { QuasarClient } from '../client/client';
@@ -17,14 +17,14 @@ export const ENDPOINTS: EndpointInfo[] = [
     name: 'mainnet',
     url: process.env.NEXT_PUBLIC_ENDPOINT || 'https://mango.rpcpool.com',
     websocket: process.env.NEXT_PUBLIC_ENDPOINT || 'https://mango.rpcpool.com',
-    custom: false,
+    custom: false
   },
   {
     name: 'devnet',
     url: 'https://api.devnet.solana.com',
     websocket: 'https://api.devnet.solana.com',
-    custom: false,
-  },
+    custom: false
+  }
 ];
 
 type ClusterType = 'mainnet' | 'devnet';
@@ -62,8 +62,8 @@ export const INITIAL_STATE = {
     providerUrl: null,
     connected: false,
     current: null,
-    tokens: [],
-  },
+    tokens: []
+  }
 };
 
 // an object with keys of Solana account addresses that we are
@@ -121,11 +121,11 @@ const useQuasarStore = create<QuasarStore>((set, get) => {
       websocket: WEBSOCKET_CONNECTION,
       client: new QuasarClient(connection, programId),
       endpoint: ENDPOINT.url,
-      slot: 0,
+      slot: 0
     },
     wallet: INITIAL_STATE.WALLET,
     set: (fn) => set(produce(fn)),
-    actions: {},
+    actions: {}
   };
 });
 
