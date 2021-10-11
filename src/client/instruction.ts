@@ -2,6 +2,7 @@ import {
   PublicKey,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
+  SystemProgram,
 } from '@solana/web3.js'
 import { encodeQuasarInstruction } from './layout'
 import BN from 'bn.js'
@@ -15,7 +16,7 @@ export function makeInitQuasarGroupInstruction(
   adminPk: PublicKey,
   mangoProgramPk: PublicKey,
 
-  signerNonce: BN
+  signerNonce: BN,
 ): TransactionInstruction {
   const keys = [
     { isSigner: false, isWritable: true, pubkey: quasarGroupPk },
@@ -42,7 +43,7 @@ export function makeAddBaseTokenInstruction(
   quasarGroupPk: PublicKey,
   mintPk: PublicKey,
   oraclePk: PublicKey,
-  adminPk: PublicKey
+  adminPk: PublicKey,
 ): TransactionInstruction {
   const keys = [
     { isSigner: false, isWritable: true, pubkey: quasarGroupPk },
@@ -53,6 +54,49 @@ export function makeAddBaseTokenInstruction(
 
   const data = encodeQuasarInstruction({
     AddBaseToken: {},
+  })
+
+  return new TransactionInstruction({
+    keys,
+    data,
+    programId: programId,
+  })
+}
+
+//  [quasar_group_ai, mint_ai, base_token_mint_ai, mango_program_ai, mango_group_ai, mango_account_ai, mango_perp_market_ai, system_program_ai, token_program_ai, rent_program_ai, admin_ai] =
+export function makeAddLeverageTokenInstruction(
+  programId: PublicKey,
+  quasarGroupPk: PublicKey,
+  mintPk: PublicKey,
+  baseTokenMintPk: PublicKey,
+  mangoProgramPk: PublicKey,
+  mangoGroupPk: PublicKey,
+  mangoAccountPk: PublicKey,
+  mangoPerpMarketPk: PublicKey,
+  adminPk: PublicKey,
+  pda: PublicKey,
+
+  targetLeverage: I80F48,
+): TransactionInstruction {
+  const keys = [
+    { isSigner: false, isWritable: true, pubkey: quasarGroupPk },
+    { isSigner: true, isWritable: true, pubkey: mintPk },
+    { isSigner: false, isWritable: false, pubkey: baseTokenMintPk },
+    { isSigner: false, isWritable: false, pubkey: mangoProgramPk },
+    { isSigner: false, isWritable: false, pubkey: mangoGroupPk },
+    { isSigner: false, isWritable: false, pubkey: mangoAccountPk },
+    { isSigner: false, isWritable: false, pubkey: mangoPerpMarketPk },
+    { isSigner: false, isWritable: false, pubkey: SystemProgram.programId },
+    { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+    { isSigner: false, isWritable: false, pubkey: SYSVAR_RENT_PUBKEY },
+    { isSigner: true, isWritable: false, pubkey: adminPk },
+    { isSigner: false, isWritable: false, pubkey: pda },
+  ]
+
+  const data = encodeQuasarInstruction({
+    AddLeverageToken: {
+      targetLeverage,
+    },
   })
 
   return new TransactionInstruction({

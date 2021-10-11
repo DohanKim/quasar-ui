@@ -9,6 +9,8 @@ import {
   Transaction,
   TransactionConfirmationStatus,
   TransactionSignature,
+  SYSVAR_RENT_PUBKEY,
+  Keypair,
 } from '@solana/web3.js'
 import BN from 'bn.js'
 import {
@@ -25,8 +27,9 @@ import { QuasarGroupLayout, StubOracleLayout } from './layout'
 import {
   makeInitQuasarGroupInstruction,
   makeAddBaseTokenInstruction,
+  makeAddLeverageTokenInstruction,
 } from './instruction'
-// import { I80F48, ZERO_I80F48 } from '@blockworks-foundation/quasar-client';
+import { I80F48, MangoAccountLayout } from '@blockworks-foundation/mango-client'
 
 import { WalletAdapter } from '../@types/types'
 import {
@@ -59,7 +62,7 @@ export class QuasarClient {
     payer: Account | WalletAdapter,
     additionalSigners: Account[],
     timeout = 30000,
-    confirmLevel: TransactionConfirmationStatus = 'confirmed'
+    confirmLevel: TransactionConfirmationStatus = 'confirmed',
   ): Promise<TransactionSignature[]> {
     return await Promise.all(
       transactions.map((tx) =>
@@ -68,9 +71,9 @@ export class QuasarClient {
           payer,
           additionalSigners,
           timeout,
-          confirmLevel
-        )
-      )
+          confirmLevel,
+        ),
+      ),
     )
   }
 
@@ -107,7 +110,7 @@ export class QuasarClient {
       transaction.recentBlockhash = blockhash
       transaction.setSigners(
         payer.publicKey,
-        ...signers.map((s) => s.publicKey)
+        ...signers.map((s) => s.publicKey),
       )
       if (signers?.length > 0) {
         transaction.partialSign(...signers)
@@ -115,7 +118,7 @@ export class QuasarClient {
     })
     if (!(payer instanceof Account)) {
       return await payer.signAllTransactions(
-        transactionsAndSigners.map(({ transaction }) => transaction)
+        transactionsAndSigners.map(({ transaction }) => transaction),
       )
     } else {
       transactionsAndSigners.forEach(({ transaction, signers }) => {
@@ -131,7 +134,7 @@ export class QuasarClient {
     additionalSigners: Account[],
     timeout = 30000,
     confirmLevel: TransactionConfirmationStatus = 'processed',
-    postSignTxCallback?: any
+    postSignTxCallback?: any,
   ): Promise<TransactionSignature> {
     await this.signTransaction({
       transaction,
@@ -150,14 +153,14 @@ export class QuasarClient {
     }
     const txid: TransactionSignature = await this.connection.sendRawTransaction(
       rawTransaction,
-      { skipPreflight: true }
+      { skipPreflight: true },
     )
 
     console.log(
       'Started awaiting confirmation for',
       txid,
       'size:',
-      rawTransaction.length
+      rawTransaction.length,
     )
 
     let done = false
@@ -178,7 +181,7 @@ export class QuasarClient {
         txid,
         timeout,
         this.connection,
-        confirmLevel
+        confirmLevel,
       )
     } catch (err) {
       if (err.timeout) {
@@ -199,7 +202,7 @@ export class QuasarClient {
             const line = simulateResult.logs[i]
             if (line.startsWith('Program log: ')) {
               throw new Error(
-                'Transaction failed: ' + line.slice('Program log: '.length)
+                'Transaction failed: ' + line.slice('Program log: '.length),
               )
             }
           }
@@ -231,7 +234,7 @@ export class QuasarClient {
       rawTransaction,
       {
         skipPreflight: true,
-      }
+      },
     )
 
     // console.log('Started awaiting confirmation for', txid);
@@ -251,7 +254,7 @@ export class QuasarClient {
         txid,
         timeout,
         this.connection,
-        confirmLevel
+        confirmLevel,
       )
     } catch (err) {
       if (err.timeout) {
@@ -263,7 +266,7 @@ export class QuasarClient {
           await simulateTransaction(
             this.connection,
             signedTransaction,
-            'single'
+            'single',
           )
         ).value
       } catch (e) {
@@ -275,7 +278,7 @@ export class QuasarClient {
             const line = simulateResult.logs[i]
             if (line.startsWith('Program log: ')) {
               throw new Error(
-                'Transaction failed: ' + line.slice('Program log: '.length)
+                'Transaction failed: ' + line.slice('Program log: '.length),
               )
             }
           }
@@ -293,45 +296,45 @@ export class QuasarClient {
 
   async initQuasarGroup(
     mangoProgram: PublicKey,
-    payer: Account | WalletAdapter
+    payer: Account | WalletAdapter,
   ): Promise<PublicKey> {
     const accountInstruction = await createAccountInstruction(
       this.connection,
       payer.publicKey,
       QuasarGroupLayout.span,
-      this.programId
+      this.programId,
     )
     const { signerKey, signerNonce } = await createSignerKeyAndNonce(
       this.programId,
-      accountInstruction.account.publicKey
+      accountInstruction.keypair.publicKey,
     )
 
     const createAccountsTransaction = new Transaction()
     createAccountsTransaction.add(accountInstruction.instruction)
 
-    const signers = [accountInstruction.account]
+    const signers = [new Account(accountInstruction.keypair.secretKey)]
     await this.sendTransaction(createAccountsTransaction, payer, signers)
 
     const initQuasarGroupInstruction = makeInitQuasarGroupInstruction(
       this.programId,
-      accountInstruction.account.publicKey,
+      accountInstruction.keypair.publicKey,
       signerKey,
       payer.publicKey,
       mangoProgram,
-      new BN(signerNonce)
+      new BN(signerNonce),
     )
 
     const initQuasarGroupTransaction = new Transaction()
     initQuasarGroupTransaction.add(initQuasarGroupInstruction)
     await this.sendTransaction(initQuasarGroupTransaction, payer, [])
 
-    return accountInstruction.account.publicKey
+    return accountInstruction.keypair.publicKey
   }
 
   async getQuasarGroup(quasarGroup: PublicKey): Promise<QuasarGroup> {
     const accountInfo = await this.connection.getAccountInfo(quasarGroup)
     const decoded = QuasarGroupLayout.decode(
-      accountInfo == null ? undefined : accountInfo.data
+      accountInfo == null ? undefined : accountInfo.data,
     )
 
     return new QuasarGroup(quasarGroup, decoded)
@@ -341,18 +344,74 @@ export class QuasarClient {
     quasarGroupPk: PublicKey,
     mintPk: PublicKey,
     oraclePk: PublicKey,
-    admin: Account | WalletAdapter
+    admin: Account | WalletAdapter,
   ): Promise<TransactionSignature> {
     const addBaseTokenInstruction = makeAddBaseTokenInstruction(
       this.programId,
       quasarGroupPk,
       mintPk,
       oraclePk,
-      admin.publicKey
+      admin.publicKey,
     )
 
     const addBaseTokenTransaction = new Transaction()
     addBaseTokenTransaction.add(addBaseTokenInstruction)
     return await this.sendTransaction(addBaseTokenTransaction, admin, [])
+  }
+
+  //  [quasar_group_ai, mint_ai, base_token_mint_ai, mango_program_ai, mango_group_ai, mango_account_ai, mango_perp_market_ai, system_program_ai, token_program_ai, rent_program_ai, admin_ai] =
+  async addLeverageToken(
+    quasarGroupPk: PublicKey,
+    baseTokenMintPk: PublicKey,
+    mangoProgram: PublicKey,
+    mangoGroup: PublicKey,
+    mangoPerpMarket: PublicKey,
+    admin: Account | WalletAdapter,
+    targetLeverage: I80F48,
+  ): Promise<PublicKey> {
+    const mintKeypair = new Keypair()
+
+    const mangoAccountInstruction = await createAccountInstruction(
+      this.connection,
+      admin.publicKey,
+      MangoAccountLayout.span,
+      mangoProgram,
+    )
+
+    const [pda, _] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('leverage_token'),
+        mangoAccountInstruction.keypair.publicKey.toBuffer(),
+      ],
+      this.programId,
+    )
+
+    const addLeverageTokenInstruction = makeAddLeverageTokenInstruction(
+      this.programId,
+      quasarGroupPk,
+      mintKeypair.publicKey,
+      baseTokenMintPk,
+      mangoProgram,
+      mangoGroup,
+      mangoAccountInstruction.keypair.publicKey,
+      mangoPerpMarket,
+      admin.publicKey,
+      pda,
+      targetLeverage,
+    )
+
+    const addLeverageTokenTransaction = new Transaction()
+    addLeverageTokenTransaction.add(
+      mangoAccountInstruction.instruction,
+      addLeverageTokenInstruction,
+    )
+
+    const signers = [
+      new Account(mangoAccountInstruction.keypair.secretKey),
+      new Account(mintKeypair.secretKey),
+    ]
+    await this.sendTransaction(addLeverageTokenTransaction, admin, signers)
+
+    return mintKeypair.publicKey
   }
 }
