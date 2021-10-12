@@ -1,17 +1,18 @@
 import useQuasarStore from '../stores/useQuasarStore'
-import ConnectWalletButton from './ConnectWalletButton'
+import MintLeverageTokenForm from './MintLeverageTokenForm'
 
 const Home = () => {
-    const connected = useQuasarStore((s) => s.wallet.connected)
-    const publicKey = useQuasarStore((s) => s.wallet.current?.publicKey)
+  const connected = useQuasarStore((s) => s.wallet.connected)
+  const publicKey = useQuasarStore((s) => s.wallet.current?.publicKey)
 
-    return (
-        <>
-            <div>
-                Home
-            </div>
-        </>
-    )
+  return (
+    <>
+      <div>
+        Home
+        <MintLeverageTokenForm />
+      </div>
+    </>
+  )
 }
 
 export default Home

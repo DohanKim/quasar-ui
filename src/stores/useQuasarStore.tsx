@@ -3,9 +3,28 @@ import produce from 'immer'
 import IDS from '../ids.json'
 import { Config, TokenConfig } from '../client/config'
 import { TokenAccount } from '../token'
+import QuasarGroup from '../client/QuasarGroup'
 import { AccountInfo, Commitment, Connection, PublicKey } from '@solana/web3.js'
 import { EndpointInfo, WalletAdapter } from '../@types/types'
 import { QuasarClient } from '../client/client'
+import {
+  GroupConfig,
+  MangoCache,
+  MangoClient,
+  MangoGroup,
+  PerpMarket,
+  getMarketByBaseSymbolAndKind,
+  MarketConfig,
+  PerpMarketLayout,
+  getAllMarkets,
+  getMultipleAccounts,
+  getTokenAccountsByOwnerWithWrappedSol,
+  getTokenByMint,
+  nativeToUi,
+} from '@blockworks-foundation/mango-client'
+import { Market } from '@project-serum/serum'
+import { notify } from '../utils/notifications'
+import { zipDict } from '../utils'
 
 export const ENDPOINTS: EndpointInfo[] = [
   {
@@ -43,6 +62,7 @@ const defaultMangoGroupIds = IDS['groups'].find(
 
 export const programId = new PublicKey(defaultMangoGroupIds.quasarProgramId)
 console.log('program ID', programId.toString())
+export const quasarGroupPk = new PublicKey(defaultMangoGroupIds.quasarGroupPk)
 
 export const mangoProgramId = new PublicKey(defaultMangoGroupIds.mangoProgramId)
 export const serumProgramId = new PublicKey(defaultMangoGroupIds.serumProgramId)
@@ -83,8 +103,19 @@ interface QuasarStore extends State {
     current: Connection
     websocket: Connection
     client: QuasarClient
+    mangoClient: MangoClient
     endpoint: string
     slot: number
+  }
+  quasarGroup: QuasarGroup
+  selectedMangoGroup: {
+    config: GroupConfig
+    name: string
+    current: MangoGroup | null
+    markets: {
+      [address: string]: Market | PerpMarket
+    }
+    cache: MangoCache | null
   }
   wallet: {
     providerUrl: string
@@ -111,12 +142,179 @@ const useQuasarStore = create<QuasarStore>((set, get) => {
       current: connection,
       websocket: WEBSOCKET_CONNECTION,
       client: new QuasarClient(connection, programId),
+      mangoClient: new MangoClient(connection, mangoProgramId),
       endpoint: ENDPOINT.url,
       slot: 0,
     },
+    quasarGroup: null,
+    selectedMangoGroup: {
+      config: DEFAULT_MANGO_GROUP_CONFIG,
+      name: DEFAULT_MANGO_GROUP_NAME,
+      current: null,
+      markets: {},
+      rootBanks: [],
+      cache: null,
+    },
+    selectedMarket: {
+      config: getMarketByBaseSymbolAndKind(
+        DEFAULT_MANGO_GROUP_CONFIG,
+        'BTC',
+        'perp',
+      ) as MarketConfig,
+      kind: 'perp',
+      current: null,
+      markPrice: 0,
+      askInfo: null,
+      bidInfo: null,
+      orderBook: { bids: [], asks: [] },
+      fills: [],
+    },
     wallet: INITIAL_STATE.WALLET,
     set: (fn) => set(produce(fn)),
-    actions: {},
+    actions: {
+      async fetchWalletTokens() {
+        const groupConfig = get().selectedMangoGroup.config
+        const wallet = get().wallet.current
+        const connected = get().wallet.connected
+        const connection = get().connection.current
+        const set = get().set
+
+        if (wallet?.publicKey && connected) {
+          const ownedTokenAccounts =
+            await getTokenAccountsByOwnerWithWrappedSol(
+              connection,
+              wallet.publicKey,
+            )
+          const tokens = []
+          ownedTokenAccounts.forEach((account) => {
+            const config = getTokenByMint(groupConfig, account.mint)
+            if (config) {
+              const uiBalance = nativeToUi(account.amount, config.decimals)
+              tokens.push({ account, config, uiBalance })
+            }
+          })
+
+          set((state) => {
+            state.wallet.tokens = tokens
+          })
+        } else {
+          set((state) => {
+            state.wallet.tokens = []
+          })
+        }
+      },
+      async fetchQuasarGroup() {
+        const set = get().set
+        const client = get().connection.client
+
+        return client
+          .getQuasarGroup(quasarGroupPk)
+          .then(async (quasarGroup) => {
+            set((state) => {
+              state.quasarGroup = quasarGroup
+            })
+          })
+          .catch((err) => {
+            notify({
+              title: 'Could not get quasar group',
+              description: `${err}`,
+              type: 'error',
+            })
+            console.log('Could not get quasar group: ', err)
+          })
+      },
+      async fetchMangoGroup() {
+        const set = get().set
+        const mangoGroupConfig = get().selectedMangoGroup.config
+        const mangoClient = get().connection.mangoClient
+        const connection = get().connection.current
+
+        return mangoClient
+          .getMangoGroup(mangoGroupPk)
+          .then(async (mangoGroup) => {
+            const allMarketConfigs = getAllMarkets(mangoGroupConfig)
+            const allMarketPks = allMarketConfigs.map((m) => m.publicKey)
+
+            let allMarketAccountInfos, mangoCache
+            try {
+              const resp = await Promise.all([
+                getMultipleAccounts(connection, allMarketPks),
+                mangoGroup.loadCache(connection),
+                mangoGroup.loadRootBanks(connection),
+              ])
+              allMarketAccountInfos = resp[0]
+              mangoCache = resp[1]
+            } catch {
+              notify({
+                type: 'error',
+                title: 'Failed to load the mango group. Please refresh.',
+              })
+            }
+
+            const allMarketAccounts = allMarketConfigs.map((config, i) => {
+              if (config.kind == 'spot') {
+                const decoded = Market.getLayout(programId).decode(
+                  allMarketAccountInfos[i].accountInfo.data,
+                )
+                return new Market(
+                  decoded,
+                  config.baseDecimals,
+                  config.quoteDecimals,
+                  undefined,
+                  mangoGroupConfig.serumProgramId,
+                )
+              }
+              if (config.kind == 'perp') {
+                const decoded = PerpMarketLayout.decode(
+                  allMarketAccountInfos[i].accountInfo.data,
+                )
+                return new PerpMarket(
+                  config.publicKey,
+                  config.baseDecimals,
+                  config.quoteDecimals,
+                  decoded,
+                )
+              }
+            })
+
+            const allBidsAndAsksPks = allMarketConfigs
+              .map((m) => [m.bidsKey, m.asksKey])
+              .flat()
+            const allBidsAndAsksAccountInfos = await getMultipleAccounts(
+              connection,
+              allBidsAndAsksPks,
+            )
+
+            const allMarkets = zipDict(
+              allMarketPks.map((pk) => pk.toBase58()),
+              allMarketAccounts,
+            )
+
+            set((state) => {
+              state.selectedMangoGroup.current = mangoGroup
+              state.selectedMangoGroup.cache = mangoCache
+              state.selectedMangoGroup.markets = allMarkets
+
+              allMarketAccountInfos
+                .concat(allBidsAndAsksAccountInfos)
+                .forEach(({ publicKey, context, accountInfo }) => {
+                  if (context.slot >= state.connection.slot) {
+                    state.connection.slot = context.slot
+                    state.accountInfos[publicKey.toBase58()] = accountInfo
+                  }
+                })
+            })
+          })
+          .catch((err) => {
+            notify({
+              title: 'Could not get mango group',
+              description: `${err}`,
+              type: 'error',
+            })
+            console.log('Could not get mango group: ', err)
+          })
+      },
+    },
   }
 })
 

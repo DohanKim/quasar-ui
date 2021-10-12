@@ -9,8 +9,8 @@ import { useState } from 'react'
 
 const AddLeverageTokenForm = () => {
   const quasarClient = useQuasarStore((s) => s.connection.client)
+  const quasarGroup = useQuasarStore((s) => s.quasarGroup)
 
-  const [quasarGroup, setQuasarGroup] = useState('')
   const [baseTokenMint, setBaseTokenMint] = useState('')
   const [mangoPerpMarket, setMangoPerpMarket] = useState('')
   const [targetLeverage, setTargetLeverage] = useState('')
@@ -26,12 +26,13 @@ const AddLeverageTokenForm = () => {
 
     try {
       const leverageToken = await quasarClient.addLeverageToken(
-        new PublicKey(quasarGroup),
+        quasarGroup.publicKey,
         new PublicKey(baseTokenMint),
         new PublicKey(mangoProgramId),
         new PublicKey(mangoGroupPk),
         new PublicKey(mangoPerpMarket),
         wallet,
+        quasarGroup.signerKey,
         new I80F48(new BN(targetLeverage)),
       )
       notify({
@@ -39,7 +40,6 @@ const AddLeverageTokenForm = () => {
       })
 
       console.log(leverageToken.toString())
-      console.log(await quasarClient.getQuasarGroup(new PublicKey(quasarGroup)))
     } catch (err) {
       console.warn('Error adding leverage token:', err)
       notify({
@@ -53,16 +53,6 @@ const AddLeverageTokenForm = () => {
   return (
     <>
       <div className="m-4">
-        <div>
-          <label>quasar group</label>
-          <input
-            className={`border`}
-            type="text"
-            name="quasarGroup"
-            value={quasarGroup}
-            onChange={handleTextChange(setQuasarGroup)}
-          />
-        </div>
         <div>
           <label>base token mint</label>
           <input
@@ -93,7 +83,12 @@ const AddLeverageTokenForm = () => {
             onChange={handleTextChange(setTargetLeverage)}
           />
         </div>
-        <button onClick={() => addLeverageToken()}>add leverage token</button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => addLeverageToken()}
+        >
+          add leverage token
+        </button>
       </div>
     </>
   )

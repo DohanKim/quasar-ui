@@ -3,11 +3,12 @@ import Home from './components/Home'
 import Admin from './components/Admin'
 import Notifications from './components/Notification'
 import useWallet from './hooks/useWallet'
-import { BrowserRouter, Route } from 'react-router-dom';
-
+import { BrowserRouter, Route } from 'react-router-dom'
+import useHydrateStore from './hooks/useHydrateStore'
 
 function App() {
   useWallet()
+  useHydrateStore()
 
   return (
     <div className="App">
@@ -20,8 +21,7 @@ function App() {
         </>
       </BrowserRouter>
     </div>
-  );
+  )
 }
 
-export default App;
-
+export default App

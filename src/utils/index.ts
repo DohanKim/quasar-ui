@@ -13,3 +13,14 @@ export function abbreviateAddress(address: PublicKey, size = 5) {
   const base58 = address.toBase58()
   return base58.slice(0, size) + '…' + base58.slice(-size)
 }
+
+export function zipDict<K extends string | number | symbol, V>(
+  keys: K[],
+  values: V[],
+) {
+  const result: Partial<Record<K, V>> = {}
+  keys.forEach((key, index) => {
+    result[key] = values[index]
+  })
+  return result
+}

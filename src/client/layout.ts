@@ -170,12 +170,12 @@ QuasarInstructionLayout.addVariant(
 )
 QuasarInstructionLayout.addVariant(
   3,
-  struct([u64('quantity')]),
+  struct([I80F48Layout('targetLeverage'), u64('quantity')]),
   'MintLeverageToken',
 )
 QuasarInstructionLayout.addVariant(
   4,
-  struct([u64('quantity')]),
+  struct([I80F48Layout('targetLeverage'), u64('quantity')]),
   'RedeemLeverageToken',
 )
 
@@ -184,6 +184,7 @@ const instructionMaxSpan = Math.max(
   ...Object.values(QuasarInstructionLayout.registry).map((r) => r.span),
 )
 export function encodeQuasarInstruction(data) {
+  console.log(data)
   const b = Buffer.alloc(instructionMaxSpan)
   const span = QuasarInstructionLayout.encode(data, b)
   return b.slice(0, span)

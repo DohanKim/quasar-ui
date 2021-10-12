@@ -28,6 +28,7 @@ import {
   makeInitQuasarGroupInstruction,
   makeAddBaseTokenInstruction,
   makeAddLeverageTokenInstruction,
+  makeMintLeverageTokenInstruction,
 } from './instruction'
 import { I80F48, MangoAccountLayout } from '@blockworks-foundation/mango-client'
 
@@ -359,7 +360,6 @@ export class QuasarClient {
     return await this.sendTransaction(addBaseTokenTransaction, admin, [])
   }
 
-  //  [quasar_group_ai, mint_ai, base_token_mint_ai, mango_program_ai, mango_group_ai, mango_account_ai, mango_perp_market_ai, system_program_ai, token_program_ai, rent_program_ai, admin_ai] =
   async addLeverageToken(
     quasarGroupPk: PublicKey,
     baseTokenMintPk: PublicKey,
@@ -367,6 +367,7 @@ export class QuasarClient {
     mangoGroup: PublicKey,
     mangoPerpMarket: PublicKey,
     admin: Account | WalletAdapter,
+    pda: PublicKey,
     targetLeverage: I80F48,
   ): Promise<PublicKey> {
     const mintKeypair = new Keypair()
@@ -379,7 +380,6 @@ export class QuasarClient {
     )
     console.log(mangoAccountInstruction.keypair.publicKey.toString())
 
-    const quasarGroup = await this.getQuasarGroup(quasarGroupPk)
     const addLeverageTokenInstruction = makeAddLeverageTokenInstruction(
       this.programId,
       quasarGroupPk,
@@ -390,7 +390,7 @@ export class QuasarClient {
       mangoAccountInstruction.keypair.publicKey,
       mangoPerpMarket,
       admin.publicKey,
-      quasarGroup.signerKey,
+      pda,
       targetLeverage,
     )
 
@@ -407,5 +407,72 @@ export class QuasarClient {
     await this.sendTransaction(addLeverageTokenTransaction, admin, signers)
 
     return mintKeypair.publicKey
+  }
+
+  async mintLeverageToken(
+    quasarGroupPk: PublicKey,
+    baseTokenMintPk: PublicKey,
+    mangoProgram: PublicKey,
+    mangoGroupPk: PublicKey,
+    mangoAccountPk: PublicKey,
+    owner: Account | WalletAdapter,
+    mangoCachePk: PublicKey,
+    mangoRootBankPk: PublicKey,
+    mangoNodeBankPk: PublicKey,
+    mangoVaultPk: PublicKey,
+    targetLeverage: I80F48,
+    quantity: BN,
+  ): Promise<TransactionSignature> {
+    const transaction = new Transaction()
+
+    let wrappedSolAccount: Account | null = null
+    wrappedSolAccount = new Account()
+    const lamports = Math.round(quantity.toNumber() * LAMPORTS_PER_SOL) + 1e7
+    transaction.add(
+      SystemProgram.createAccount({
+        fromPubkey: owner.publicKey,
+        newAccountPubkey: wrappedSolAccount.publicKey,
+        lamports,
+        space: 165,
+        programId: TOKEN_PROGRAM_ID,
+      }),
+    )
+
+    transaction.add(
+      initializeAccount({
+        account: wrappedSolAccount.publicKey,
+        mint: WRAPPED_SOL_MINT,
+        owner: owner.publicKey,
+      }),
+    )
+
+    const mintLeverageTokenInstruction = makeMintLeverageTokenInstruction(
+      this.programId,
+      quasarGroupPk,
+      baseTokenMintPk,
+      mangoProgram,
+      mangoGroupPk,
+      mangoAccountPk,
+      owner.publicKey,
+      mangoCachePk,
+      mangoRootBankPk,
+      mangoNodeBankPk,
+      mangoVaultPk,
+      wrappedSolAccount.publicKey,
+      targetLeverage,
+      quantity.mul(new BN(LAMPORTS_PER_SOL)),
+    )
+    transaction.add(mintLeverageTokenInstruction)
+
+    transaction.add(
+      closeAccount({
+        source: wrappedSolAccount.publicKey,
+        destination: owner.publicKey,
+        owner: owner.publicKey,
+      }),
+    )
+
+    const signers = [wrappedSolAccount]
+    return await this.sendTransaction(transaction, owner, signers)
   }
 }

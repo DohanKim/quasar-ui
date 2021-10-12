@@ -24,7 +24,7 @@ const AddBaseTokenForm = () => {
         new PublicKey(quasarGroup),
         new PublicKey(mint),
         new PublicKey(oracle),
-        wallet
+        wallet,
       )
       notify({
         title: 'base token added',
@@ -74,7 +74,12 @@ const AddBaseTokenForm = () => {
             onChange={handleTextChange(setOracle)}
           />
         </div>
-        <button onClick={() => addBaseToken()}>add base token</button>
+        <button
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          onClick={() => addBaseToken()}
+        >
+          add base token
+        </button>
       </div>
     </>
   )
