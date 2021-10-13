@@ -411,7 +411,7 @@ export class QuasarClient {
 
   async mintLeverageToken(
     quasarGroupPk: PublicKey,
-    baseTokenMintPk: PublicKey,
+    tokenMintPk: PublicKey,
     mangoProgram: PublicKey,
     mangoGroupPk: PublicKey,
     mangoAccountPk: PublicKey,
@@ -420,7 +420,7 @@ export class QuasarClient {
     mangoRootBankPk: PublicKey,
     mangoNodeBankPk: PublicKey,
     mangoVaultPk: PublicKey,
-    targetLeverage: I80F48,
+    pda: PublicKey,
     quantity: BN,
   ): Promise<TransactionSignature> {
     const transaction = new Transaction()
@@ -446,10 +446,34 @@ export class QuasarClient {
       }),
     )
 
+    let leverageTokenAccountPk = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMintPk,
+      owner.publicKey,
+    )
+    const tokenAccountExists = await this.connection.getAccountInfo(
+      leverageTokenAccountPk,
+      'recent',
+    )
+    if (!tokenAccountExists) {
+      transaction.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          tokenMintPk,
+          leverageTokenAccountPk,
+          owner.publicKey,
+          owner.publicKey,
+        ),
+      )
+    }
+
     const mintLeverageTokenInstruction = makeMintLeverageTokenInstruction(
       this.programId,
       quasarGroupPk,
-      baseTokenMintPk,
+      tokenMintPk,
+      leverageTokenAccountPk,
       mangoProgram,
       mangoGroupPk,
       mangoAccountPk,
@@ -459,8 +483,8 @@ export class QuasarClient {
       mangoNodeBankPk,
       mangoVaultPk,
       wrappedSolAccount.publicKey,
-      targetLeverage,
-      quantity.mul(new BN(LAMPORTS_PER_SOL)),
+      pda,
+      quantity,
     )
     transaction.add(mintLeverageTokenInstruction)
 

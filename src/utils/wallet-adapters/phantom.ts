@@ -56,7 +56,7 @@ export class PhantomWalletAdapter
   }
 
   async signAllTransactions(
-    transactions: Transaction[]
+    transactions: Transaction[],
   ): Promise<Transaction[]> {
     if (!this._provider) {
       return transactions

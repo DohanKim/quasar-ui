@@ -39,7 +39,7 @@ const AddLeverageTokenForm = () => {
         title: 'leverage token added',
       })
 
-      console.log(leverageToken.toString())
+      console.log('new leverage token mint: ', leverageToken.toString())
     } catch (err) {
       console.warn('Error adding leverage token:', err)
       notify({

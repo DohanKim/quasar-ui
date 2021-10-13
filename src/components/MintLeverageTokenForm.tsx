@@ -1,6 +1,6 @@
 import useQuasarStore from '../stores/useQuasarStore'
 
-import { PublicKey } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
 import { I80F48 } from '@blockworks-foundation/mango-client'
 import { mangoProgramId } from '../stores/useQuasarStore'
@@ -12,14 +12,14 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
 
-const AddLeverageTokenForm = () => {
+const MintLeverageTokenForm = () => {
   const quasarClient = useQuasarStore((s) => s.connection.client)
   const quasarGroup = useQuasarStore((s) => s.quasarGroup)
   const mangoGroup = useQuasarStore((s) => s.selectedMangoGroup.current)
+  const connection = useQuasarStore((s) => s.connection.current)
 
-  const [baseTokenMint, setBaseTokenMint] = useState('')
-  const [targetLeverage, setTargetLeverage] = useState(0)
-  const [quantity, setQuantity] = useState(0)
+  const [tokenMint, setTokenMint] = useState('')
+  const [quantity, setQuantity] = useState('')
 
   const handleTextChange =
     (setFn) =>
@@ -28,21 +28,19 @@ const AddLeverageTokenForm = () => {
 
   const mintLeverageToken = async () => {
     const wallet = useQuasarStore.getState().wallet.current
-    console.log(targetLeverage)
 
     try {
+      const tokenMintPk = new PublicKey(tokenMint)
       const quoteTokenMint = new PublicKey(
         'So11111111111111111111111111111111111111112',
       )
-      const leverageTokenIndex = quasarGroup.getLeverageTokenIndex(
-        new PublicKey(baseTokenMint),
-        new I80F48(new BN(targetLeverage)),
-      )
-      const quoteTokenIndex = mangoGroup.getTokenIndex(quoteTokenMint) // to deposit solana
+      const leverageTokenIndex =
+        quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
+      const quoteTokenIndex = mangoGroup.getTokenIndex(quoteTokenMint)
 
       const leverageToken = await quasarClient.mintLeverageToken(
         quasarGroup.publicKey,
-        new PublicKey(baseTokenMint),
+        new PublicKey(tokenMint),
         mangoProgramId,
         mangoGroup.publicKey,
         quasarGroup.leverageTokens[leverageTokenIndex].mangoAccount,
@@ -51,8 +49,7 @@ const AddLeverageTokenForm = () => {
         mangoGroup.tokens[quoteTokenIndex].rootBank,
         mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBanks[0],
         mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBankAccounts[0].vault,
-        // wallet.publicKey,
-        I80F48.fromNumber(targetLeverage),
+        quasarGroup.signerKey,
         new BN(quantity),
       )
       notify({
@@ -74,23 +71,13 @@ const AddLeverageTokenForm = () => {
     <>
       <div className="m-4">
         <div>
-          <label>base token mint</label>
+          <label>token mint</label>
           <input
             className={`border`}
             type="text"
-            name="baseTokenMint"
-            value={baseTokenMint}
-            onChange={handleTextChange(setBaseTokenMint)}
-          />
-        </div>
-        <div>
-          <label>target leverage</label>
-          <input
-            className={`border`}
-            type="number"
-            name="targetLeverage"
-            value={targetLeverage}
-            onChange={handleTextChange(setTargetLeverage)}
+            name="tokenMint"
+            value={tokenMint}
+            onChange={handleTextChange(setTokenMint)}
           />
         </div>
         <div>
@@ -114,4 +101,4 @@ const AddLeverageTokenForm = () => {
   )
 }
 
-export default AddLeverageTokenForm
+export default MintLeverageTokenForm

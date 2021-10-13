@@ -752,11 +752,11 @@ video {
 .whitespace-nowrap {
 	white-space: nowrap;
 }
-.rounded-none {
-	border-radius: 0px;
-}
 .rounded {
 	border-radius: 0.25rem;
+}
+.rounded-none {
+	border-radius: 0px;
 }
 .rounded-md {
 	border-radius: 0.375rem;
@@ -776,22 +776,18 @@ video {
 .border-th-fgd-4 {
 	border-color: var(--fgd-4);
 }
-.bg-th-bkg-1 {
-	background-color: var(--bkg-1);
-}
 .bg-blue-500 {
 	--tw-bg-opacity: 1;
 	background-color: rgba(59, 130, 246, var(--tw-bg-opacity));
+}
+.bg-th-bkg-1 {
+	background-color: var(--bkg-1);
 }
 .bg-th-bkg-3 {
 	background-color: var(--bkg-3);
 }
 .bg-th-bkg-2 {
 	background-color: var(--bkg-2);
-}
-.bg-green-500 {
-	--tw-bg-opacity: 1;
-	background-color: rgba(16, 185, 129, var(--tw-bg-opacity));
 }
 .p-4 {
 	padding: 1rem;
@@ -802,10 +798,6 @@ video {
 .p-2 {
 	padding: 0.5rem;
 }
-.px-3 {
-	padding-left: 0.75rem;
-	padding-right: 0.75rem;
-}
 .py-2 {
 	padding-top: 0.5rem;
 	padding-bottom: 0.5rem;
@@ -813,6 +805,10 @@ video {
 .px-4 {
 	padding-left: 1rem;
 	padding-right: 1rem;
+}
+.px-3 {
+	padding-left: 0.75rem;
+	padding-right: 0.75rem;
 }
 .py-6 {
 	padding-top: 1.5rem;
@@ -852,17 +848,21 @@ video {
 	font-size: 0.875rem;
 	line-height: 1.25rem;
 }
-.font-normal {
-	font-weight: 400;
-}
 .font-bold {
 	font-weight: 700;
+}
+.font-normal {
+	font-weight: 400;
 }
 .leading-3 {
 	line-height: .75rem;
 }
 .tracking-wider {
 	letter-spacing: 0.05em;
+}
+.text-white {
+	--tw-text-opacity: 1;
+	color: rgba(255, 255, 255, var(--tw-text-opacity));
 }
 .text-th-primary {
 	color: var(--primary);
@@ -872,10 +872,6 @@ video {
 }
 .text-th-fgd-3 {
 	color: var(--fgd-3);
-}
-.text-white {
-	--tw-text-opacity: 1;
-	color: rgba(255, 255, 255, var(--tw-text-opacity));
 }
 .text-th-fgd-1 {
 	color: var(--fgd-1);
@@ -1249,13 +1245,13 @@ input[type='number'] {
 	cursor: pointer;
 }
 
-.hover\:bg-th-bkg-4:hover {
-	background-color: var(--bkg-4);
-}
-
 .hover\:bg-blue-700:hover {
 	--tw-bg-opacity: 1;
 	background-color: rgba(29, 78, 216, var(--tw-bg-opacity));
+}
+
+.hover\:bg-th-bkg-4:hover {
+	background-color: var(--bkg-4);
 }
 
 .hover\:bg-th-bkg-2:hover {

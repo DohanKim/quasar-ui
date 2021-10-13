@@ -109,7 +109,8 @@ export function makeAddLeverageTokenInstruction(
 export function makeMintLeverageTokenInstruction(
   programId: PublicKey,
   quasarGroupPk: PublicKey,
-  baseTokenMintPk: PublicKey,
+  tokenMintPk: PublicKey,
+  ownerLeverageTokenAccountPk: PublicKey,
   mangoProgramPk: PublicKey,
   mangoGroupPk: PublicKey,
   mangoAccountPk: PublicKey,
@@ -118,14 +119,15 @@ export function makeMintLeverageTokenInstruction(
   mangoRootBankPk: PublicKey,
   mangoNodeBankPk: PublicKey,
   mangoVaultPk: PublicKey,
-  ownerTokenAccountPk: PublicKey,
+  ownerQuoteTokenAccountPk: PublicKey,
+  pda: PublicKey,
 
-  targetLeverage: I80F48,
   quantity: BN,
 ): TransactionInstruction {
   const keys = [
     { isSigner: false, isWritable: false, pubkey: quasarGroupPk },
-    { isSigner: false, isWritable: false, pubkey: baseTokenMintPk },
+    { isSigner: false, isWritable: true, pubkey: tokenMintPk },
+    { isSigner: false, isWritable: true, pubkey: ownerLeverageTokenAccountPk },
     { isSigner: false, isWritable: false, pubkey: mangoProgramPk },
     { isSigner: false, isWritable: false, pubkey: mangoGroupPk },
     { isSigner: false, isWritable: true, pubkey: mangoAccountPk },
@@ -135,15 +137,12 @@ export function makeMintLeverageTokenInstruction(
     { isSigner: false, isWritable: true, pubkey: mangoNodeBankPk },
     { isSigner: false, isWritable: true, pubkey: mangoVaultPk },
     { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
-    { isSigner: false, isWritable: true, pubkey: ownerTokenAccountPk },
+    { isSigner: false, isWritable: true, pubkey: ownerQuoteTokenAccountPk },
+    { isSigner: false, isWritable: false, pubkey: pda },
   ]
-  for (let i = 0; i < 12; i++) {
-    console.log(keys[i].pubkey.toString())
-  }
 
   const data = encodeQuasarInstruction({
     MintLeverageToken: {
-      targetLeverage,
       quantity,
     },
   })
