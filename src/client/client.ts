@@ -30,6 +30,7 @@ import {
   makeAddLeverageTokenInstruction,
   makeMintLeverageTokenInstruction,
   makeBurnLeverageTokenInstruction,
+  makeRebalanceInstruction,
 } from './instruction'
 import {
   I80F48,
@@ -590,6 +591,45 @@ export class QuasarClient {
       quantity,
     )
     transaction.add(mintLeverageTokenInstruction)
+
+    const signers = []
+    return await this.sendTransaction(transaction, owner, signers)
+  }
+
+  async rebalance(
+    quasarGroupPk: PublicKey,
+    tokenMintPk: PublicKey,
+    pda: PublicKey,
+    mangoProgram: PublicKey,
+    mangoGroupPk: PublicKey,
+    mangoAccountPk: PublicKey,
+    owner: Account | WalletAdapter,
+    mangoCachePk: PublicKey,
+    mangoPerpMarketPk: PublicKey,
+    mangoBidsPk: PublicKey,
+    mangoAsksPk: PublicKey,
+    mangoEventQueuePk: PublicKey,
+    mangoOpenOrders: PublicKey[],
+  ): Promise<TransactionSignature> {
+    const transaction = new Transaction()
+
+    const instruction = makeRebalanceInstruction(
+      this.programId,
+      quasarGroupPk,
+      tokenMintPk,
+      pda,
+      mangoProgram,
+      mangoGroupPk,
+      mangoAccountPk,
+      owner.publicKey,
+      mangoCachePk,
+      mangoPerpMarketPk,
+      mangoBidsPk,
+      mangoAsksPk,
+      mangoEventQueuePk,
+      mangoOpenOrders,
+    )
+    transaction.add(instruction)
 
     const signers = []
     return await this.sendTransaction(transaction, owner, signers)

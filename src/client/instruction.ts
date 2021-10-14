@@ -209,3 +209,49 @@ export function makeBurnLeverageTokenInstruction(
     programId: programId,
   })
 }
+
+export function makeRebalanceInstruction(
+  programId: PublicKey,
+  quasarGroupPk: PublicKey,
+  tokenMintPk: PublicKey,
+  pda: PublicKey,
+  mangoProgramPk: PublicKey,
+  mangoGroupPk: PublicKey,
+  mangoAccountPk: PublicKey,
+  ownerPk: PublicKey,
+  mangoCachePk: PublicKey,
+  mangoPerpMarketPk: PublicKey,
+  mangoBidsPk: PublicKey,
+  mangoAsksPk: PublicKey,
+  mangoEventQueuePk: PublicKey,
+  mangoOpenOrders: PublicKey[],
+): TransactionInstruction {
+  const keys = [
+    { isSigner: false, isWritable: false, pubkey: quasarGroupPk },
+    { isSigner: false, isWritable: false, pubkey: tokenMintPk },
+    { isSigner: false, isWritable: false, pubkey: pda },
+    { isSigner: false, isWritable: false, pubkey: mangoProgramPk },
+    { isSigner: false, isWritable: false, pubkey: mangoGroupPk },
+    { isSigner: false, isWritable: true, pubkey: mangoAccountPk },
+    { isSigner: true, isWritable: false, pubkey: ownerPk },
+    { isSigner: false, isWritable: false, pubkey: mangoCachePk },
+    { isSigner: false, isWritable: true, pubkey: mangoPerpMarketPk },
+    { isSigner: false, isWritable: true, pubkey: mangoBidsPk },
+    { isSigner: false, isWritable: true, pubkey: mangoAsksPk },
+    { isSigner: false, isWritable: true, pubkey: mangoEventQueuePk },
+    ...mangoOpenOrders.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+  ]
+  const data = encodeQuasarInstruction({
+    Rebalance: {},
+  })
+
+  return new TransactionInstruction({
+    keys,
+    data,
+    programId,
+  })
+}

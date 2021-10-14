@@ -178,6 +178,7 @@ QuasarInstructionLayout.addVariant(
   struct([u64('quantity')]),
   'BurnLeverageToken',
 )
+QuasarInstructionLayout.addVariant(5, struct([]), 'Rebalance')
 
 const instructionMaxSpan = Math.max(
   // @ts-ignore
