@@ -6,8 +6,8 @@ import { useState } from 'react'
 
 const AddBaseTokenForm = () => {
   const quasarClient = useQuasarStore((s) => s.connection.client)
+  const quasarGroup = useQuasarStore((s) => s.quasarGroup)
 
-  const [quasarGroup, setQuasarGroup] = useState('')
   const [mint, setMint] = useState('')
   const [oracle, setOracle] = useState('')
 
@@ -21,7 +21,7 @@ const AddBaseTokenForm = () => {
 
     try {
       await quasarClient.addBaseToken(
-        new PublicKey(quasarGroup),
+        quasarGroup.publicKey,
         new PublicKey(mint),
         new PublicKey(oracle),
         wallet,
@@ -29,8 +29,6 @@ const AddBaseTokenForm = () => {
       notify({
         title: 'base token added',
       })
-
-      console.log(await quasarClient.getQuasarGroup(new PublicKey(quasarGroup)))
     } catch (err) {
       console.warn('Error adding base token:', err)
       notify({
@@ -44,16 +42,6 @@ const AddBaseTokenForm = () => {
   return (
     <>
       <div className="m-4">
-        <div>
-          <label>quasar group</label>
-          <input
-            className={`border`}
-            type="text"
-            name="quasarGroup"
-            value={quasarGroup}
-            onChange={handleTextChange(setQuasarGroup)}
-          />
-        </div>
         <div>
           <label>token mint</label>
           <input

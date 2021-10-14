@@ -1,4 +1,5 @@
 import useQuasarStore from '../stores/useQuasarStore'
+import BurnLeverageTokenForm from './BurnLeverageTokenForm'
 import MintLeverageTokenForm from './MintLeverageTokenForm'
 
 const Home = () => {
@@ -10,6 +11,7 @@ const Home = () => {
       <div>
         Home
         <MintLeverageTokenForm />
+        <BurnLeverageTokenForm />
       </div>
     </>
   )

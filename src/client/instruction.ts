@@ -153,3 +153,59 @@ export function makeMintLeverageTokenInstruction(
     programId: programId,
   })
 }
+
+export function makeBurnLeverageTokenInstruction(
+  programId: PublicKey,
+  quasarGroupPk: PublicKey,
+  tokenMintPk: PublicKey,
+  ownerLeverageTokenAccountPk: PublicKey,
+  mangoProgramPk: PublicKey,
+  mangoGroupPk: PublicKey,
+  mangoAccountPk: PublicKey,
+  owner: PublicKey,
+  mangoCachePk: PublicKey,
+  mangoRootBankPk: PublicKey,
+  mangoNodeBankPk: PublicKey,
+  mangoVaultPk: PublicKey,
+  ownerQuoteTokenAccountPk: PublicKey,
+  pda: PublicKey,
+  mangoPda: PublicKey,
+  mangoSpotOpenOrders: PublicKey[],
+
+  quantity: BN,
+): TransactionInstruction {
+  const keys = [
+    { isSigner: false, isWritable: false, pubkey: quasarGroupPk },
+    { isSigner: false, isWritable: true, pubkey: tokenMintPk },
+    { isSigner: false, isWritable: true, pubkey: ownerLeverageTokenAccountPk },
+    { isSigner: false, isWritable: false, pubkey: mangoProgramPk },
+    { isSigner: false, isWritable: false, pubkey: mangoGroupPk },
+    { isSigner: false, isWritable: true, pubkey: mangoAccountPk },
+    { isSigner: true, isWritable: false, pubkey: owner },
+    { isSigner: false, isWritable: false, pubkey: mangoCachePk },
+    { isSigner: false, isWritable: false, pubkey: mangoRootBankPk },
+    { isSigner: false, isWritable: true, pubkey: mangoNodeBankPk },
+    { isSigner: false, isWritable: true, pubkey: mangoVaultPk },
+    { isSigner: false, isWritable: false, pubkey: TOKEN_PROGRAM_ID },
+    { isSigner: false, isWritable: true, pubkey: ownerQuoteTokenAccountPk },
+    { isSigner: false, isWritable: false, pubkey: pda },
+    { isSigner: false, isWritable: false, pubkey: mangoPda },
+    ...mangoSpotOpenOrders.map((pubkey) => ({
+      isSigner: false,
+      isWritable: false,
+      pubkey,
+    })),
+  ]
+
+  const data = encodeQuasarInstruction({
+    BurnLeverageToken: {
+      quantity,
+    },
+  })
+
+  return new TransactionInstruction({
+    keys,
+    data,
+    programId: programId,
+  })
+}

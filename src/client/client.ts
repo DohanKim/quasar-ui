@@ -29,8 +29,13 @@ import {
   makeAddBaseTokenInstruction,
   makeAddLeverageTokenInstruction,
   makeMintLeverageTokenInstruction,
+  makeBurnLeverageTokenInstruction,
 } from './instruction'
-import { I80F48, MangoAccountLayout } from '@blockworks-foundation/mango-client'
+import {
+  I80F48,
+  makeWithdrawInstruction,
+  MangoAccountLayout,
+} from '@blockworks-foundation/mango-client'
 
 import { WalletAdapter } from '../@types/types'
 import {
@@ -497,6 +502,96 @@ export class QuasarClient {
     )
 
     const signers = [wrappedSolAccount]
+    return await this.sendTransaction(transaction, owner, signers)
+  }
+
+  async burnLeverageToken(
+    quasarGroupPk: PublicKey,
+    tokenMintPk: PublicKey,
+    quoteTokenMintPk: PublicKey,
+    mangoProgram: PublicKey,
+    mangoGroupPk: PublicKey,
+    mangoAccountPk: PublicKey,
+    owner: Account | WalletAdapter,
+    mangoCachePk: PublicKey,
+    mangoRootBankPk: PublicKey,
+    mangoNodeBankPk: PublicKey,
+    mangoVaultPk: PublicKey,
+    pda: PublicKey,
+    mangoPda: PublicKey,
+    mangoSpotOpenOrders: PublicKey[],
+    quantity: BN,
+  ): Promise<TransactionSignature> {
+    const transaction = new Transaction()
+
+    let quoteTokenAccountPk = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      quoteTokenMintPk,
+      owner.publicKey,
+    )
+    const quoteTokenAccountExists = await this.connection.getAccountInfo(
+      quoteTokenAccountPk,
+      'recent',
+    )
+    if (!quoteTokenAccountExists) {
+      transaction.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          quoteTokenMintPk,
+          quoteTokenAccountPk,
+          owner.publicKey,
+          owner.publicKey,
+        ),
+      )
+    }
+
+    let leverageTokenAccountPk = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      tokenMintPk,
+      owner.publicKey,
+    )
+    const tokenAccountExists = await this.connection.getAccountInfo(
+      leverageTokenAccountPk,
+      'recent',
+    )
+    if (!tokenAccountExists) {
+      transaction.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          tokenMintPk,
+          leverageTokenAccountPk,
+          owner.publicKey,
+          owner.publicKey,
+        ),
+      )
+    }
+
+    const mintLeverageTokenInstruction = makeBurnLeverageTokenInstruction(
+      this.programId,
+      quasarGroupPk,
+      tokenMintPk,
+      leverageTokenAccountPk,
+      mangoProgram,
+      mangoGroupPk,
+      mangoAccountPk,
+      owner.publicKey,
+      mangoCachePk,
+      mangoRootBankPk,
+      mangoNodeBankPk,
+      mangoVaultPk,
+      quoteTokenAccountPk,
+      pda,
+      mangoPda,
+      mangoSpotOpenOrders,
+      quantity,
+    )
+    transaction.add(mintLeverageTokenInstruction)
+
+    const signers = []
     return await this.sendTransaction(transaction, owner, signers)
   }
 }
