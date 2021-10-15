@@ -160,6 +160,10 @@ const MintButton = () => {
         setInputLeverageToken(e.target.value);
     }
 
+    const handleMinting = () => {
+
+    }
+
     return (
         <Container>
             {
@@ -190,8 +194,13 @@ const MintButton = () => {
                                     onClick={openTokenList}
                                     text={"Select token"}/>
                     </Row>
-                    <Row>
-                        <GreyButton padding={"10px 20px 10px 20px"} text={"Mint"}/>
+                    <Row justifyContent={"center"}>
+                        <Button padding={"10px 40px 10px 40px"}
+                                onClick={mintLeverageToken}
+                                text={"Mint"}/>
+                        {/*<GreyButton padding={"10px 20px 10px 20px"}*/}
+                        {/*            onClick={handleMinting}*/}
+                        {/*            text={"Mint"}/>*/}
                     </Row>
                 </Modal>
             }
@@ -278,7 +287,7 @@ const Block = styled.div`
 const Row = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: ${props => props.justifyContent};
   align-items: center;
   margin-bottom: ${props => props.marginBottom};
 `;
