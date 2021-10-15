@@ -6,6 +6,7 @@ const InputText = (props) => {
         <Input type="text"
                width={props.width}
                height={props.height}
+               marginRight={props.marginRight}
                maxlength={"256"}
                onChange={props.onChange} />
     )
@@ -14,6 +15,7 @@ const InputText = (props) => {
 const Input = styled.input`
   width: ${props => props.width};
   height: ${props => props.height};
+  margin-right: ${props => props.marginRight};
   border-style: solid;
   border-width: 3px;
   border-color: hsla(0, 0%, 100%, 0.3);

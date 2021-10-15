@@ -22,6 +22,12 @@ import {
 import useHydrateStore from "../../hooks/useHydrateStore";
 import useWallet from "../../hooks/useWallet";
 
+import icUSDT from "../images/ic_usdt.png";
+import icUSDC from "../images/ic_usdc.png";
+import icSOL from "../images/ic_solana.png";
+import icBTC from "../images/ic_btc.png";
+import icETH from "../images/ic_eth.png";
+
 const MintButton = () => {
     useHydrateStore()
     const { wallet } = useWallet()
@@ -86,8 +92,145 @@ const MintButton = () => {
         console.log(quasarGroup.leverageTokens[0].mint)
     }
 
+    const tokenList = [
+        {
+            index: 1,
+            name: 'USDT',
+            img: icUSDT,
+            price: 1
+        },
+        {
+            index: 2,
+            name: 'USDC',
+            img: icUSDC,
+            price: 1
+        },
+        {
+            index: 3,
+            name: 'BTC',
+            img: icBTC,
+            price: 61718
+        },
+        {
+            index: 4,
+            name: 'ETH',
+            img: icETH,
+            price: 3888
+        },
+        {
+            index: 5,
+            name: 'SOL',
+            img: icSOL,
+            price: 162
+        }
+    ];
+
+    const [modalVisible, setModalVisible] = useState(false);
+    const [tokenListVisible, setTokenListVisible] = useState(false);
+    const [currentDepositToken, setCurrentDepositToken] = useState(tokenList[0]);
+    const [inputLeverageToken, setInputLeverageToken] = useState(0);
+
+    const openModal = () => {
+        setModalVisible(true);
+    }
+
+    const closeModal = () => {
+        setModalVisible(false);
+    }
+
+    const openTokenList = () => {
+        setTokenListVisible(true);
+    }
+
+    const closeTokenList = () => {
+        setTokenListVisible(false);
+    }
+
+    const selectDepositToken = (token) => {
+        console.log(token);
+        setCurrentDepositToken(token);
+        closeTokenList();
+    }
+
+    const calcLeverageTokenPrice = (depositTokenPrice) => {
+        return (inputLeverageToken * (100 / depositTokenPrice)).toFixed(5);
+    }
+
+    const handleLeverageTokenInputChange = (e) => {
+        setInputLeverageToken(e.target.value);
+    }
+
     return (
         <Container>
+            {
+                modalVisible && <Modal
+                  visible={modalVisible}
+                  closable={true}
+                  width={"420px"}
+                  maskClosable={true}
+                  onClose={closeModal}>
+                    <Row marginBottom={'20px'}>
+                        <ModalTitle>Create</ModalTitle>
+                    </Row>
+                    <Row marginBottom={'5px'}>
+                        <InputText
+                          width={"100px"}
+                          marginRight={"20px"}
+                          color={"#fff"}
+                          onChange={handleLeverageTokenInputChange}
+                        />
+                        <TokenName>
+                            3x Long Solana Token
+                        </TokenName>
+                    </Row>
+                    <Row marginBottom={'30px'}>
+                        Required {currentDepositToken.name} : {calcLeverageTokenPrice(currentDepositToken.price)}
+                        <GreyButton padding={"10px 20px 10px 20px"}
+                                    margin={"0px 0px 0px 20px"}
+                                    onClick={openTokenList}
+                                    text={"Select token"}/>
+                    </Row>
+                    <Row>
+                        <GreyButton padding={"10px 20px 10px 20px"} text={"Mint"}/>
+                    </Row>
+                </Modal>
+            }
+            {
+                tokenListVisible && <Modal
+                  visible={tokenListVisible}
+                  width={"400px"}
+                  height={"500px"}
+                  closable={true}
+                  maskClosable={true}
+                  onClose={closeTokenList}>
+                    <Row marginBottom={"30px"}>
+                        <ModalTitle>Token list</ModalTitle>
+                    </Row>
+                    <Row>
+                        <TokenList>
+                            {
+                                tokenList.map((token) => {
+                                    return <TokenItem marginBottom={"20px"}>
+                                        <Row>
+                                            <TokenIcon>
+                                                <img width={"24px"} src={token.img} />
+                                            </TokenIcon>
+                                            <div>{token.name}</div>
+                                        </Row>
+                                        <div>
+                                            <GreyButton
+                                              padding={"10px 20px 10px 20px"}
+                                              text={"Select"}
+                                              onClick={() => selectDepositToken(token)}
+                                            />
+                                        </div>
+                                    </TokenItem>
+                                })
+                            }
+                        </TokenList>
+                    </Row>
+                </Modal>
+            }
             <Row marginBottom={'40px'}>
                 <StyleText fontSize={'44px'} fontWeight={'700'} text={'Mint Tokens'} />
             </Row>
@@ -106,7 +249,8 @@ const MintButton = () => {
                 </Row>
                 <Row>
                     <Button text={'Mint sSOL x3 for USDT'}
-                        onClick={mintLeverageToken}
+                        // onClick={mintLeverageToken}
+                        onClick={openModal}
                         padding={'22px 56px'} margin={'0px 28px 0px 0px'} />
                     <GreyButton onClick={getQuasarGroup} text={'Burn'} padding={'22px 56px'} />
                 </Row>
@@ -139,14 +283,34 @@ const Row = styled.div`
   margin-bottom: ${props => props.marginBottom};
 `;
 
-const TokenName = styled.div`
-  font-size: 40px;
+const ModalTitle = styled.div`
+  font-size: 36px;
   font-weight: 700;
 `;
 
-const TokenPrice = styled.div`
-  font-size: 30px;
-  font-weight: 500;
+const TokenName = styled.div`
+  font-size: 18px;
+  font-weight: 600;
+`;
+
+const TokenList = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 480px;
+`;
+
+const TokenItem = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  
+  width: 350px;
+  margin-bottom: ${props => props.marginBottom};
+`;
+
+const TokenIcon = styled.div`
+  margin-right: 20px;
 `;
 
 

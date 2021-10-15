@@ -10,7 +10,7 @@ const Main = () => {
             <Container>
                 <MetaData />
                 <MintButton />
-                <Mint />
+                {/*<Mint />*/}
                 {/* <Exchange /> */}
             </Container>
         </AnimationBackground>
