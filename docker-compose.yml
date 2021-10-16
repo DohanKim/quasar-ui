@@ -1,14 +1,5 @@
-version: '3.8'
-
+version: '3'
 services:
-  frontend:
-    image: node:14
-    command: yarn run craco:start
-    working_dir: /app
-    volumes:
-      - ./:/app
-    ports:
-      - '3000:3000'
   proxy:
     container_name: proxy
     hostname: proxy
@@ -22,5 +13,3 @@ services:
       - ./proxy/server-https-common.conf:/etc/nginx/server-https-common.conf:ro
       - /etc/letsencrypt/archive/app.quasarprotocol.io:/etc/ssl:ro
       - ./build:/etc/nginx/html
-    depends_on:
-      - frontend
