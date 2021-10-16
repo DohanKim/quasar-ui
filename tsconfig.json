@@ -22,7 +22,7 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
-    "src/components/ConnectWalletButton.jsx",
-    "src/components/Admin.jsx"
+    "src/bu-components/ConnectWalletButton.jsx",
+    "src/bu-components/Admin.jsx"
   ]
 }

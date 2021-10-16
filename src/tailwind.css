@@ -62,6 +62,8 @@
 
 body {
   @apply text-sm font-body tracking-wider;
+  background-color: #13111a;
+  overflow-x: hidden;
 }
 
 p {
