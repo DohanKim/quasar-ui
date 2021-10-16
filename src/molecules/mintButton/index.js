@@ -82,6 +82,8 @@ const MintButton = () => {
                 title: 'leverage token minted',
             })
 
+            setModalVisible(false)
+
             console.log(leverageToken.toString())
         } catch (err) {
             console.warn('Error minting leverage token:', err)
@@ -350,7 +352,7 @@ const MintButton = () => {
                     <StyleText fontSize={'40px'}
                         mobileFontSize={'28px'}
                         fontWeight={'700'}
-                        text={'3X Long Solana Token'} />
+                        text={'3QLSOL Token'} />
                 </Row>
                 <Row marginBottom={'40px'}>
                     <StyleText fontSize={'30px'}
@@ -361,15 +363,15 @@ const MintButton = () => {
                     <Tag color={'#46BD77'} text={'+ 10%'} />
                 </Row>
                 <Row>
-                    <Button text={'Mint sSOL x3 for USDT'}
-                        // onClick={mintLevqerageToken}
+                    <Button text={'Mint Solana x3 Leverage'}
+                        // onClick={mintLeverageToken}
                         onClick={openModal}
                         padding={'22px 56px'}
                         margin={'0px 28px 0px 0px'} />
-                    <Margin mobileMarginBottom={'20px'}/>
+                    <Margin mobileMarginBottom={'20px'} />
                     <GreyButton onClick={openRedeemModal}
-                                text={'Burn'}
-                                padding={'22px 56px'} />
+                        text={'Burn'}
+                        padding={'22px 56px'} />
                 </Row>
             </Block>
         </Container>
