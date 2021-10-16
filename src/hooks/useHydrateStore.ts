@@ -14,11 +14,13 @@ const useHydrateStore = () => {
   useEffect(() => {
     actions.fetchQuasarGroup()
     actions.fetchMangoGroup()
+    // actions.fetchAllMangoAccounts()
   }, [actions])
 
   useInterval(() => {
     actions.fetchQuasarGroup()
     actions.fetchMangoGroup()
+    // actions.fetchAllMangoAccounts()
   }, 120 * SECONDS)
 }
 
