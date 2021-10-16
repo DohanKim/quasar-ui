@@ -56,7 +56,7 @@ const MintButton = () => {
         console.log(mangoGroup)
 
         try {
-            const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
+            const tokenMintPk = new PublicKey('9gx8Cot1DvYCzq5xA9V5or5R7USFXvEbESw337hNEipJ')
             const quoteTokenMint = new PublicKey(
                 'So11111111111111111111111111111111111111112',
             )
@@ -64,9 +64,11 @@ const MintButton = () => {
                 quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
             const quoteTokenIndex = mangoGroup.getTokenIndex(quoteTokenMint)
 
+            console.log(new BN(inputLeverageToken))
+
             const leverageToken = await quasarClient.mintLeverageToken(
                 quasarGroup.publicKey,
-                new PublicKey(quasarGroup.leverageTokens[0].mint),
+                tokenMintPk,
                 mangoProgramId,
                 mangoGroup.publicKey,
                 quasarGroup.leverageTokens[leverageTokenIndex].mangoAccount,
@@ -76,7 +78,7 @@ const MintButton = () => {
                 mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBanks[0],
                 mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBankAccounts[0].vault,
                 quasarGroup.signerKey,
-                new BN(quantity),
+                new BN(inputLeverageToken),
             )
             notify({
                 title: 'leverage token minted',
@@ -99,7 +101,7 @@ const MintButton = () => {
         const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
         console.log(mangoGroup)
         try {
-            const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
+            const tokenMintPk = new PublicKey('9gx8Cot1DvYCzq5xA9V5or5R7USFXvEbESw337hNEipJ')
             const quoteTokenMint = new PublicKey(
                 'So11111111111111111111111111111111111111112',
             )
@@ -113,6 +115,8 @@ const MintButton = () => {
                 mangoAccountPk,
                 serumProgramId,
             )
+
+
 
             const leverageToken = await quasarClient.burnLeverageToken(
                 quasarGroup.publicKey,
@@ -130,7 +134,7 @@ const MintButton = () => {
                 mangoGroup.signerKey,
                 mangoAccount.spotOpenOrders,
 
-                new BN(quantity),
+                new BN(inputLeverageToken),
             )
             notify({
                 title: 'leverage token burned',
@@ -145,11 +149,6 @@ const MintButton = () => {
                 type: 'error',
             })
         }
-    }
-
-    const getQuasarGroup = async () => {
-        const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
-        console.log(quasarGroup.leverageTokens[0].mint)
     }
 
     const tokenList = [
@@ -300,7 +299,7 @@ const MintButton = () => {
                     </Row>
                     <Row justifyContent={"center"}>
                         <Button padding={"10px 40px 10px 40px"}
-                            onClick={closeRedeemModal}
+                            onClick={burnLeverageToken}
                             text={"Burn"} />
                         {/*<GreyButton padding={"10px 20px 10px 20px"}*/}
                         {/*            onClick={handleMinting}*/}
@@ -365,7 +364,7 @@ const MintButton = () => {
                         // onClick={mintLeverageToken}
                         onClick={openModal}
                         padding={'22px 56px'} margin={'0px 28px 0px 0px'} />
-                    <GreyButton onClick={burnLeverageToken} text={'Burn'} padding={'22px 56px'} />
+                    <GreyButton onClick={openRedeemModal} text={'Burn'} padding={'22px 56px'} />
                 </Row>
             </Block>
         </Container>

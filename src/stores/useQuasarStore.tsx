@@ -167,7 +167,7 @@ const useQuasarStore = create<QuasarStore>((set, get) => {
     selectedMarket: {
       config: getMarketByBaseSymbolAndKind(
         DEFAULT_MANGO_GROUP_CONFIG,
-        'BTC',
+        'SOL',
         'perp',
       ) as MarketConfig,
       kind: 'perp',
@@ -232,51 +232,53 @@ const useQuasarStore = create<QuasarStore>((set, get) => {
             console.log('Could not get quasar group: ', err)
           })
       },
-      // async fetchAllMangoAccounts() {
-      //   const set = get().set
-      //   const mangoGroup = get().selectedMangoGroup.current
-      //   const mangoClient = get().connection.client
-      //   const wallet = get().wallet.current
-      //   const walletPk = wallet?.publicKey
+      async fetchAllMangoAccounts() {
+        const set = get().set
+        const mangoGroup = get().selectedMangoGroup.current
+        const quasarPk = new PublicKey(
+          '4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo',
+        )
 
-      //   if (!walletPk) return
-      //   return mangoClient
-      //     .getMangoAccountsForOwner(mangoGroup, walletPk, true)
-      //     .then((mangoAccounts) => {
-      //       if (mangoAccounts.length > 0) {
-      //         const sortedAccounts = mangoAccounts
-      //           .slice()
-      //           .sort((a, b) =>
-      //             a.publicKey.toBase58() > b.publicKey.toBase58() ? 1 : -1
-      //           )
+        if (!quasarPk) return
+        return this.mangoClient
+          .getMangoAccountsForOwner(mangoGroup, quasarPk, true)
+          .then((mangoAccounts) => {
+            if (mangoAccounts.length > 0) {
+              const sortedAccounts = mangoAccounts
+                .slice()
+                .sort((a, b) =>
+                  a.publicKey.toBase58() > b.publicKey.toBase58() ? 1 : -1,
+                )
 
-      //         set((state) => {
-      //           state.selectedMangoAccount.initialLoad = false
-      //           state.mangoAccounts = sortedAccounts
-      //           if (!state.selectedMangoAccount.current) {
-      //             const lastAccount = localStorage.getItem(LAST_ACCOUNT_KEY)
-      //             state.selectedMangoAccount.current =
-      //               mangoAccounts.find(
-      //                 (ma) =>
-      //                   ma.publicKey.toString() === JSON.parse(lastAccount)
-      //               ) || sortedAccounts[0]
-      //           }
-      //         })
-      //       } else {
-      //         set((state) => {
-      //           state.selectedMangoAccount.initialLoad = false
-      //         })
-      //       }
-      //     })
-      //     .catch((err) => {
-      //       notify({
-      //         type: 'error',
-      //         title: 'Unable to load mango account',
-      //         description: err.message,
-      //       })
-      //       console.log('Could not get margin accounts for wallet', err)
-      //     })
-      // },
+              set((state) => {
+                state.selectedMangoAccount.initialLoad = false
+                state.mangoAccounts = sortedAccounts
+                if (!state.selectedMangoAccount.current) {
+                  const lastAccount = localStorage.getItem(
+                    'lastAccountViewed-3.0',
+                  )
+                  state.selectedMangoAccount.current =
+                    mangoAccounts.find(
+                      (ma) =>
+                        ma.publicKey.toString() === JSON.parse(lastAccount),
+                    ) || sortedAccounts[0]
+                }
+              })
+            } else {
+              set((state) => {
+                state.selectedMangoAccount.initialLoad = false
+              })
+            }
+          })
+          .catch((err) => {
+            notify({
+              type: 'error',
+              title: 'Unable to load mango account',
+              description: err.message,
+            })
+            console.log('Could not get margin accounts for wallet', err)
+          })
+      },
       async fetchMangoGroup() {
         const set = get().set
         const mangoGroupConfig = get().selectedMangoGroup.config

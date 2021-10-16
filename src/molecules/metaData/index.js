@@ -24,8 +24,7 @@ const MetaData = () => {
     const [outstanding, setOutstanding] = React.useState(10)
     const [totalFund, setTotalFund] = React.useState(3000)
     const [tokenPrice, setTokenPrice] = React.useState(300)
-    const [perpPrice, setPerpPrice] = React.useState(100)
-
+    // const [perpPrice, setPerpPrice] = React.useState(0)
 
     const quasarClient = useQuasarStore((s) => s.connection.client)
     const mangoClient = useQuasarStore((s) => s.connection.mangoClient)
@@ -33,13 +32,36 @@ const MetaData = () => {
     const mangoGroup = useQuasarStore((s) => s.selectedMangoGroup.current)
     const mangoMarkets = useQuasarStore((s) => s.selectedMangoGroup.markets)
     const connection = useQuasarStore((s) => s.connection.current)
+    const mangoCache = useQuasarStore((s) => s.selectedMangoGroup.cache)
+
+    const perpPrice = useOraclePrice()
 
     const { wallet } = useWallet()
+
+    React.useEffect(() => {
+        const changeTokenBalance = (Math.random() * 3).toFixed(8);
+        setInterval(() => {
+
+            // const random = parseInt(Math.random() * 10)
+            // const delta = Math.random() * 2
+            // if (random % 2 === 0) {
+            //     setTokenPrice(price => parseFloat(price) + parseFloat(delta))
+            //     setPerpPrice(price => parseFloat(price) + parseFloat(delta))
+            // } else {
+            //     setTokenPrice(price => parseFloat(price) - parseFloat(delta))
+            //     setPerpPrice(price => parseFloat(price) - parseFloat(delta))
+            // }
+            // calculatingValue(changeTokenBalance)
+
+        }, 3000)
+    }, [])
+
+
 
     const getQuasarMangoData = async () => {
         const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
         try {
-            const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
+            const tokenMintPk = new PublicKey('9gx8Cot1DvYCzq5xA9V5or5R7USFXvEbESw337hNEipJ')
             const leverageTokenIndex =
                 quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
             const leverageToken = quasarGroup.leverageTokens[leverageTokenIndex]
@@ -51,7 +73,7 @@ const MetaData = () => {
                 serumProgramId,
             )
 
-            console.log('@@leverageToken@@', leverageToken)
+            console.log('@@leverageToken@@', (leverageToken.targetLeverage).toString())
             console.log('@@mangoGroup@@', mangoGroup)
             console.log('@@mangoAccount@@', mangoAccount)
 
@@ -59,9 +81,16 @@ const MetaData = () => {
                 leverageToken.mangoPerpMarket.toBase58()
             ]
 
-            const computeValue = await mangoAccount.computeValue(mangoGroup, mangoGroup.mangoCache)
+            const baseLot = perpMarket.baseLotSize
+            const basePosition = perpMarket.baseDecimals
 
-            console.log('@$@$@$@$', computeValue)
+            const perpAccount = mangoAccount.perpAccounts[1]
+            console.log(mangoAccount.perpAccounts, perpAccount.basePosition.toString(), perpAccount.takerBase.toString())
+
+            const computeValue = await mangoAccount.computeValue(mangoGroup, mangoCache)
+            const accountLeverage = await mangoAccount.getLeverage(mangoGroup, mangoCache)
+
+            console.log('@$@$@$@$', { basePosition: perpAccount.basePosition.toString(), leverage: accountLeverage.toString(), computeValue: formatUsdValue(computeValue), baseLot: (baseLot).toString(), SolPerpPrice: formatUsdValue(perpPrice) })
 
             // await quasarClient.rebalance(
             //     quasarGroup.publicKey,
@@ -78,6 +107,8 @@ const MetaData = () => {
             //     perpMarket.eventQueue,
             //     mangoAccount.spotOpenOrders,
             // )
+
+
 
 
             console.log(leverageToken.toString())
@@ -129,22 +160,6 @@ const MetaData = () => {
         }
     }
 
-    React.useEffect(() => {
-        const changeTokenBalance = (Math.random() * 3).toFixed(8);
-        setInterval(() => {
-            const random = parseInt(Math.random() * 10)
-            const delta = Math.random() * 2
-            if (random % 2 === 0) {
-                setTokenPrice(price => parseFloat(price) + parseFloat(delta))
-                setPerpPrice(price => parseFloat(price) + parseFloat(delta))
-            } else {
-                setTokenPrice(price => parseFloat(price) - parseFloat(delta))
-                setPerpPrice(price => parseFloat(price) - parseFloat(delta))
-            }
-            // calculatingValue(changeTokenBalance)
-
-        }, 3000)
-    }, [])
 
     const calculatingValue = (changeTokenBalance) => {
         calcBasketPerp(changeTokenBalance)
