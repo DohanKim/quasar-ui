@@ -5,21 +5,174 @@ import Tag from "../../components/tag";
 import GreyButton from "../../components/greyButton";
 import StyleText from "../../components/styleText";
 
-import useQuasarStore from '../../stores/useQuasarStore'
+import useOraclePrice from "../../hooks/useOraclePrice";
+import { formatUsdValue } from "../../utils";
+
+import useQuasarStore, { serumProgramId, mangoProgramId } from '../../stores/useQuasarStore'
+import { PublicKey } from '@solana/web3.js'
+import useWallet from "../../hooks/useWallet";
+import { MangoAccount } from "@blockworks-foundation/mango-client";
+import useHydrateStore from "../../hooks/useHydrateStore";
+import BN from 'bn.js'
+import { sleep } from "../../client/utils";
 
 const MetaData = () => {
-    const [leverage, setLeverage] = React.useState(3.02);
-    const [basketPerp, setBasketPerp] = React.useState(12)
-    const [basketUSDT, setBasketUSDT] = React.useState(12000)
-    const [outstanding, setOutstanding] = React.useState(12000)
-    const [totalFund, setTotalFund] = React.useState(12000)
-    const [tokenPrice, setTokenPrice] = React.useState(234.4)
+    useHydrateStore()
+    const [leverage, setLeverage] = React.useState(3.05);
+    const [basketPerp, setBasketPerp] = React.useState(12.2)
+    const [basketUSDT, setBasketUSDT] = React.useState(-15.8)
+    const [outstanding, setOutstanding] = React.useState(10)
+    const [totalFund, setTotalFund] = React.useState(3000)
+    const [tokenPrice, setTokenPrice] = React.useState(300)
+    const [perpPrice, setPerpPrice] = React.useState(100)
+
 
     const quasarClient = useQuasarStore((s) => s.connection.client)
+    const mangoClient = useQuasarStore((s) => s.connection.mangoClient)
     const quasarGroup = useQuasarStore((s) => s.quasarGroup)
     const mangoGroup = useQuasarStore((s) => s.selectedMangoGroup.current)
+    const mangoMarkets = useQuasarStore((s) => s.selectedMangoGroup.markets)
     const connection = useQuasarStore((s) => s.connection.current)
 
+    const { wallet } = useWallet()
+
+    const oraclePrice = useOraclePrice();
+
+    // console.log(formatUsdValue(oraclePrice))
+
+    const getQuasarMangoData = async () => {
+        const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
+        try {
+            const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
+            const leverageTokenIndex =
+                quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
+            const leverageToken = quasarGroup.leverageTokens[leverageTokenIndex]
+            const mangoAccountPk = leverageToken.mangoAccount
+
+            const mangoAccount = await mangoClient.getMangoAccount(
+                mangoAccountPk,
+                serumProgramId,
+            )
+
+            const perpMarket = mangoMarkets[
+                leverageToken.mangoPerpMarket.toBase58()
+            ]
+
+            const computeValue = await mangoAccount.computeValue(mangoGroup, mangoGroup.mangoCache).toFixed(2)
+
+            console.log('@$@$@$@$', computeValue)
+
+            // await quasarClient.rebalance(
+            //     quasarGroup.publicKey,
+            //     tokenMintPk,
+            //     quasarGroup.signerKey,
+            //     mangoProgramId,
+            //     mangoGroup.publicKey,
+            //     mangoAccountPk,
+            //     wallet,
+            //     mangoGroup.mangoCache,
+            //     perpMarket.publicKey,
+            //     perpMarket.bids,
+            //     perpMarket.asks,
+            //     perpMarket.eventQueue,
+            //     mangoAccount.spotOpenOrders,
+            // )
+
+
+            console.log(leverageToken.toString())
+        } catch (err) {
+            console.warn('Error rebalancing token asset:', err)
+
+        }
+    }
+
+
+    const rebalance = async () => {
+
+        const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
+        console.log(mangoGroup)
+        try {
+            const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
+            const quoteTokenMint = new PublicKey(
+                'So11111111111111111111111111111111111111112',
+            )
+            const leverageTokenIndex =
+                quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
+            const quoteTokenIndex = mangoGroup.getTokenIndex(quoteTokenMint)
+            const mangoAccountPk =
+                quasarGroup.leverageTokens[leverageTokenIndex].mangoAccount
+
+            const mangoAccount = await mangoClient.getMangoAccount(
+                mangoAccountPk,
+                serumProgramId,
+            )
+
+            const leverageToken = await quasarClient.burnLeverageToken(
+                quasarGroup.publicKey,
+                tokenMintPk,
+                new PublicKey('So11111111111111111111111111111111111111112'),
+                mangoProgramId,
+                mangoGroup.publicKey,
+                mangoAccountPk,
+                wallet,
+                mangoGroup.mangoCache,
+                mangoGroup.tokens[quoteTokenIndex].rootBank,
+                mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBanks[0],
+                mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBankAccounts[0].vault,
+                quasarGroup.signerKey,
+                mangoGroup.signerKey,
+                mangoAccount.spotOpenOrders,
+
+                new BN(0.1),
+            )
+            await sleep(1000)
+            rebalancing()
+
+            console.log(leverageToken.toString())
+        } catch (err) {
+            console.warn('Error burning leverage token:', err)
+
+        }
+
+        // const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
+        // try {
+        //     const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
+        //     const leverageTokenIndex =
+        //         quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
+        //     const leverageToken = quasarGroup.leverageTokens[leverageTokenIndex]
+        //     const mangoAccountPk = leverageToken.mangoAccount
+
+        //     const mangoAccount = await mangoClient.getMangoAccount(
+        //         mangoAccountPk,
+        //         serumProgramId,
+        //     )
+
+        //     const perpMarket = mangoMarkets[
+        //         leverageToken.mangoPerpMarket.toBase58()
+        //     ]
+
+        //     await quasarClient.rebalance(
+        //         quasarGroup.publicKey,
+        //         tokenMintPk,
+        //         quasarGroup.signerKey,
+        //         mangoProgramId,
+        //         mangoGroup.publicKey,
+        //         mangoAccountPk,
+        //         wallet,
+        //         mangoGroup.mangoCache,
+        //         perpMarket.publicKey,
+        //         perpMarket.bids,
+        //         perpMarket.asks,
+        //         perpMarket.eventQueue,
+        //         mangoAccount.spotOpenOrders,
+        //     )
+
+        //     console.log(leverageToken.toString())
+        // } catch (err) {
+        //     console.warn('Error rebalancing token asset:', err)
+
+        // }
+    }
 
     React.useEffect(() => {
         const changeTokenBalance = (Math.random() * 3).toFixed(8);
@@ -28,31 +181,34 @@ const MetaData = () => {
             const delta = Math.random() * 2
             if (random % 2 === 0) {
                 setTokenPrice(price => parseFloat(price) + parseFloat(delta))
+                setPerpPrice(price => parseFloat(price) + parseFloat(delta))
             } else {
                 setTokenPrice(price => parseFloat(price) - parseFloat(delta))
+                setPerpPrice(price => parseFloat(price) - parseFloat(delta))
             }
-            calculatingValue(changeTokenBalance)
+            // calculatingValue(changeTokenBalance)
 
-
-        }, 15000)
+        }, 3000)
     }, [])
 
     const calculatingValue = (changeTokenBalance) => {
-        calcLeverage(changeTokenBalance)
         calcBasketPerp(changeTokenBalance)
         calcBasketUSDT(changeTokenBalance)
         calcOutstanding(changeTokenBalance)
         calcTotalFund(changeTokenBalance)
+        calcLeverage(changeTokenBalance)
     }
 
     const calcLeverage = (changeTokenBalance) => {
-        const random = parseInt(Math.random() * 10)
-        const delta = Math.random()
-        if (random % 2 === 0) {
-            setLeverage(leverage => (parseFloat(leverage) + parseFloat(delta)).toFixed(2))
-        } else {
-            setLeverage(leverage => (parseFloat(leverage) - parseFloat(delta)).toFixed(2))
-        }
+        // const random = parseInt(Math.random() * 10)
+        // const delta = Math.random()
+        // if (random % 2 === 0) {
+        //     setLeverage(leverage => (parseFloat(leverage) + parseFloat(delta)).toFixed(2))
+        // } else {
+        //     setLeverage(leverage => (parseFloat(leverage) - parseFloat(delta)).toFixed(2))
+        // }
+
+        setLeverage(leverage => parseFloat(parseFloat(basketPerp) * parseFloat(perpPrice) / parseFloat(totalFund)).toFixed(2))
     }
 
     const calcBasketPerp = (changeTokenBalance) => {
@@ -60,7 +216,8 @@ const MetaData = () => {
     }
 
     const calcBasketUSDT = (changeTokenBalance) => {
-        setBasketUSDT(basketUSDT => parseFloat(parseFloat(basketUSDT) + (parseFloat(changeTokenBalance) * parseFloat(tokenPrice))).toFixed(4))
+        const diffBalance = parseFloat(basketUSDT) - (parseFloat(basketPerp) * parseFloat(perpPrice))
+        setBasketUSDT(basketUSDT => parseFloat(parseFloat(basketUSDT) + diffBalance).toFixed(4))
     }
 
     const calcOutstanding = (changeTokenBalance) => {
@@ -68,11 +225,13 @@ const MetaData = () => {
     }
 
     const calcTotalFund = (changeTokenBalance) => {
-        setTotalFund(totalFund => parseFloat(parseFloat(totalFund) + parseFloat(changeTokenBalance)).toFixed(4))
+        setTotalFund(totalFund => parseFloat(parseFloat(totalFund) + (parseFloat(changeTokenBalance) * parseFloat(tokenPrice))).toFixed(4))
     }
 
     const rebalancing = () => {
-        calculatingValue(3)
+        setLeverage(3.00)
+        setBasketPerp(12)
+        setBasketUSDT(-15.3)
     }
 
     return (
@@ -80,7 +239,7 @@ const MetaData = () => {
             <RowTitle marginBottom={'40px'}>
                 <StyleText fontSize={'44px'} fontWeight={'700'} text={'3X Long Solana Token'} />
                 <Button
-                    padding={'22px 56px'} margin={'0px 28px 0px 0px'} text={'Rebalancing'} onClick={rebalancing}></Button>
+                    padding={'22px 56px'} margin={'0px 28px 0px 0px'} text={'Rebalancing'} onClick={rebalance}></Button>
             </RowTitle>
             <Block>
                 <Row marginBottom={'20px'}>
