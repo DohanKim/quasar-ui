@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: node:14
+    command: npm run build
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - '3000:3000'
+  proxy:
+    container_name: proxy
+    hostname: proxy
+    image: nginx:latest
+    ports:
+      - '80:80' # common web
+      - '443:443' # https
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./proxy/web.conf:/etc/nginx/web.conf:ro
+      - ./proxy/server-https-common.conf:/etc/nginx/server-https-common.conf:ro
+      - /etc/letsencrypt/archive/app.quasarprotocol.io:/etc/ssl:ro
+      - ./build:/etc/nginx/html
+    depends_on:
+      - frontend
