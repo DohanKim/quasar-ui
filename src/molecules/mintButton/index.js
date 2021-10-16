@@ -7,11 +7,16 @@ import StyleText from "../../components/styleText";
 import Modal from "../../components/modal";
 import InputText from "../../components/inputText";
 
-import useQuasarStore from '../../stores/useQuasarStore'
+import useQuasarStore, { serumProgramId } from '../../stores/useQuasarStore'
+
+import {
+    I80F48,
+    MangoAccount,
+    MangoClient,
+} from '@blockworks-foundation/mango-client'
 
 import { Keypair, PublicKey } from '@solana/web3.js'
 import BN from 'bn.js'
-import { I80F48 } from '@blockworks-foundation/mango-client'
 import { mangoProgramId } from '../../stores/useQuasarStore'
 import { notify } from '../../utils/notifications'
 import {
@@ -33,6 +38,7 @@ const MintButton = () => {
     const { wallet } = useWallet()
     const quasarClient = useQuasarStore((s) => s.connection.client)
     const quasarGroup = useQuasarStore((s) => s.quasarGroup)
+    const mangoClient = useQuasarStore((s) => s.connection.mangoClient)
     const mangoGroup = useQuasarStore((s) => s.selectedMangoGroup.current)
     const connection = useQuasarStore((s) => s.connection.current)
 
@@ -81,6 +87,58 @@ const MintButton = () => {
             console.warn('Error minting leverage token:', err)
             notify({
                 title: 'Could not mint a leverage token',
+                description: `${err}`,
+                type: 'error',
+            })
+        }
+    }
+
+    const burnLeverageToken = async () => {
+        const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
+        console.log(mangoGroup)
+        try {
+            const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
+            const quoteTokenMint = new PublicKey(
+                'So11111111111111111111111111111111111111112',
+            )
+            const leverageTokenIndex =
+                quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
+            const quoteTokenIndex = mangoGroup.getTokenIndex(quoteTokenMint)
+            const mangoAccountPk =
+                quasarGroup.leverageTokens[leverageTokenIndex].mangoAccount
+
+            const mangoAccount = await mangoClient.getMangoAccount(
+                mangoAccountPk,
+                serumProgramId,
+            )
+
+            const leverageToken = await quasarClient.burnLeverageToken(
+                quasarGroup.publicKey,
+                tokenMintPk,
+                new PublicKey('So11111111111111111111111111111111111111112'),
+                mangoProgramId,
+                mangoGroup.publicKey,
+                mangoAccountPk,
+                wallet,
+                mangoGroup.mangoCache,
+                mangoGroup.tokens[quoteTokenIndex].rootBank,
+                mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBanks[0],
+                mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBankAccounts[0].vault,
+                quasarGroup.signerKey,
+                mangoGroup.signerKey,
+                mangoAccount.spotOpenOrders,
+
+                new BN(quantity),
+            )
+            notify({
+                title: 'leverage token burned',
+            })
+
+            console.log(leverageToken.toString())
+        } catch (err) {
+            console.warn('Error burning leverage token:', err)
+            notify({
+                title: 'Could not burn a leverage token',
                 description: `${err}`,
                 type: 'error',
             })
@@ -174,20 +232,20 @@ const MintButton = () => {
         <Container>
             {
                 modalVisible && <Modal
-                  visible={modalVisible}
-                  closable={true}
-                  width={"420px"}
-                  maskClosable={true}
-                  onClose={closeModal}>
+                    visible={modalVisible}
+                    closable={true}
+                    width={"420px"}
+                    maskClosable={true}
+                    onClose={closeModal}>
                     <Row marginBottom={'20px'}>
                         <ModalTitle>Create</ModalTitle>
                     </Row>
                     <Row marginBottom={'5px'}>
                         <InputText
-                          width={"100px"}
-                          marginRight={"20px"}
-                          color={"#fff"}
-                          onChange={handleLeverageTokenInputChange}
+                            width={"100px"}
+                            marginRight={"20px"}
+                            color={"#fff"}
+                            onChange={handleLeverageTokenInputChange}
                         />
                         <TokenName>
                             3x Long Solana Token
@@ -196,14 +254,14 @@ const MintButton = () => {
                     <Row marginBottom={'30px'}>
                         Required {currentDepositToken.name} : {calcLeverageTokenPrice(currentDepositToken.price)}
                         <GreyButton padding={"10px 20px 10px 20px"}
-                                    margin={"0px 0px 0px 20px"}
-                                    onClick={openTokenList}
-                                    text={"Select token"}/>
+                            margin={"0px 0px 0px 20px"}
+                            onClick={openTokenList}
+                            text={"Select token"} />
                     </Row>
                     <Row justifyContent={"center"}>
                         <Button padding={"10px 40px 10px 40px"}
-                                onClick={mintLeverageToken}
-                                text={"Mint"}/>
+                            onClick={mintLeverageToken}
+                            text={"Mint"} />
                         {/*<GreyButton padding={"10px 20px 10px 20px"}*/}
                         {/*            onClick={handleMinting}*/}
                         {/*            text={"Mint"}/>*/}
@@ -212,20 +270,20 @@ const MintButton = () => {
             }
             {
                 redeemModalVisible && <Modal
-                  visible={redeemModalVisible}
-                  closable={true}
-                  width={"420px"}
-                  maskClosable={true}
-                  onClose={closeRedeemModal}>
+                    visible={redeemModalVisible}
+                    closable={true}
+                    width={"420px"}
+                    maskClosable={true}
+                    onClose={closeRedeemModal}>
                     <Row marginBottom={'20px'}>
                         <ModalTitle>Redeem</ModalTitle>
                     </Row>
                     <Row marginBottom={'5px'}>
                         <InputText
-                          width={"100px"}
-                          marginRight={"20px"}
-                          color={"#fff"}
-                          onChange={handleLeverageTokenInputChange}
+                            width={"100px"}
+                            marginRight={"20px"}
+                            color={"#fff"}
+                            onChange={handleLeverageTokenInputChange}
                         />
                         <TokenName>
                             3x Long Solana Token
@@ -234,14 +292,14 @@ const MintButton = () => {
                     <Row marginBottom={'30px'}>
                         You will receive {currentDepositToken.name} : {calcLeverageTokenPrice(currentDepositToken.price)}
                         <GreyButton padding={"10px 20px 10px 20px"}
-                                    margin={"0px 0px 0px 20px"}
-                                    onClick={openTokenList}
-                                    text={"Select token"}/>
+                            margin={"0px 0px 0px 20px"}
+                            onClick={openTokenList}
+                            text={"Select token"} />
                     </Row>
                     <Row justifyContent={"center"}>
                         <Button padding={"10px 40px 10px 40px"}
-                                onClick={closeRedeemModal}
-                                text={"Burn"}/>
+                            onClick={closeRedeemModal}
+                            text={"Burn"} />
                         {/*<GreyButton padding={"10px 20px 10px 20px"}*/}
                         {/*            onClick={handleMinting}*/}
                         {/*            text={"Mint"}/>*/}
@@ -250,12 +308,12 @@ const MintButton = () => {
             }
             {
                 tokenListVisible && <Modal
-                  visible={tokenListVisible}
-                  width={"400px"}
-                  height={"500px"}
-                  closable={true}
-                  maskClosable={true}
-                  onClose={closeTokenList}>
+                    visible={tokenListVisible}
+                    width={"400px"}
+                    height={"500px"}
+                    closable={true}
+                    maskClosable={true}
+                    onClose={closeTokenList}>
                     <Row marginBottom={"30px"}>
                         <ModalTitle>Token list</ModalTitle>
                     </Row>
@@ -272,9 +330,9 @@ const MintButton = () => {
                                         </Row>
                                         <div>
                                             <GreyButton
-                                              padding={"10px 20px 10px 20px"}
-                                              text={"Select"}
-                                              onClick={() => selectDepositToken(token)}
+                                                padding={"10px 20px 10px 20px"}
+                                                text={"Select"}
+                                                onClick={() => selectDepositToken(token)}
                                             />
                                         </div>
                                     </TokenItem>
@@ -305,7 +363,7 @@ const MintButton = () => {
                         // onClick={mintLeverageToken}
                         onClick={openModal}
                         padding={'22px 56px'} margin={'0px 28px 0px 0px'} />
-                    <GreyButton onClick={openRedeemModal} text={'Burn'} padding={'22px 56px'} />
+                    <GreyButton onClick={burnLeverageToken} text={'Burn'} padding={'22px 56px'} />
                 </Row>
             </Block>
         </Container>
