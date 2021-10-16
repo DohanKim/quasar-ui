@@ -130,6 +130,8 @@ const MintButton = () => {
     const [currentDepositToken, setCurrentDepositToken] = useState(tokenList[0]);
     const [inputLeverageToken, setInputLeverageToken] = useState(0);
 
+    const [redeemModalVisible, setRedeemModalVisible] = useState(false);
+
     const openModal = () => {
         setModalVisible(true);
     }
@@ -160,8 +162,12 @@ const MintButton = () => {
         setInputLeverageToken(e.target.value);
     }
 
-    const handleMinting = () => {
+    const openRedeemModal = () => {
+        setRedeemModalVisible(true);
+    }
 
+    const closeRedeemModal = () => {
+        setRedeemModalVisible(false);
     }
 
     return (
@@ -198,6 +204,44 @@ const MintButton = () => {
                         <Button padding={"10px 40px 10px 40px"}
                                 onClick={mintLeverageToken}
                                 text={"Mint"}/>
+                        {/*<GreyButton padding={"10px 20px 10px 20px"}*/}
+                        {/*            onClick={handleMinting}*/}
+                        {/*            text={"Mint"}/>*/}
+                    </Row>
+                </Modal>
+            }
+            {
+                redeemModalVisible && <Modal
+                  visible={redeemModalVisible}
+                  closable={true}
+                  width={"420px"}
+                  maskClosable={true}
+                  onClose={closeRedeemModal}>
+                    <Row marginBottom={'20px'}>
+                        <ModalTitle>Redeem</ModalTitle>
+                    </Row>
+                    <Row marginBottom={'5px'}>
+                        <InputText
+                          width={"100px"}
+                          marginRight={"20px"}
+                          color={"#fff"}
+                          onChange={handleLeverageTokenInputChange}
+                        />
+                        <TokenName>
+                            3x Long Solana Token
+                        </TokenName>
+                    </Row>
+                    <Row marginBottom={'30px'}>
+                        You will receive {currentDepositToken.name} : {calcLeverageTokenPrice(currentDepositToken.price)}
+                        <GreyButton padding={"10px 20px 10px 20px"}
+                                    margin={"0px 0px 0px 20px"}
+                                    onClick={openTokenList}
+                                    text={"Select token"}/>
+                    </Row>
+                    <Row justifyContent={"center"}>
+                        <Button padding={"10px 40px 10px 40px"}
+                                onClick={closeRedeemModal}
+                                text={"Burn"}/>
                         {/*<GreyButton padding={"10px 20px 10px 20px"}*/}
                         {/*            onClick={handleMinting}*/}
                         {/*            text={"Mint"}/>*/}
@@ -261,7 +305,7 @@ const MintButton = () => {
                         // onClick={mintLeverageToken}
                         onClick={openModal}
                         padding={'22px 56px'} margin={'0px 28px 0px 0px'} />
-                    <GreyButton onClick={getQuasarGroup} text={'Burn'} padding={'22px 56px'} />
+                    <GreyButton onClick={openRedeemModal} text={'Burn'} padding={'22px 56px'} />
                 </Row>
             </Block>
         </Container>
