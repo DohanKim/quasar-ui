@@ -24,3 +24,27 @@ export function zipDict<K extends string | number | symbol, V>(
   })
   return result
 }
+
+export const usdFormatter = (value, decimals = 2, currency = true) => {
+  if (decimals === 0) {
+    value = Math.abs(value)
+  }
+  const config = currency ? { style: 'currency', currency: 'USD' } : {}
+  return new Intl.NumberFormat('en-US', {
+    ...config,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value)
+}
+
+export const formatUsdValue = (value) => {
+  const precision =
+    value >= 1 || value <= -1
+      ? 2
+      : value === 0 ||
+        (value > 0 && value < 0.001) ||
+        (value < 0 && value > -0.001)
+      ? 0
+      : 4
+  return usdFormatter(value, precision)
+}
