@@ -36,10 +36,6 @@ const MetaData = () => {
 
     const { wallet } = useWallet()
 
-    const oraclePrice = useOraclePrice();
-
-    // console.log(formatUsdValue(oraclePrice))
-
     const getQuasarMangoData = async () => {
         const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
         try {
@@ -49,16 +45,21 @@ const MetaData = () => {
             const leverageToken = quasarGroup.leverageTokens[leverageTokenIndex]
             const mangoAccountPk = leverageToken.mangoAccount
 
+
             const mangoAccount = await mangoClient.getMangoAccount(
                 mangoAccountPk,
                 serumProgramId,
             )
 
+            console.log('@@leverageToken@@', leverageToken)
+            console.log('@@mangoGroup@@', mangoGroup)
+            console.log('@@mangoAccount@@', mangoAccount)
+
             const perpMarket = mangoMarkets[
                 leverageToken.mangoPerpMarket.toBase58()
             ]
 
-            const computeValue = await mangoAccount.computeValue(mangoGroup, mangoGroup.mangoCache).toFixed(2)
+            const computeValue = await mangoAccount.computeValue(mangoGroup, mangoGroup.mangoCache)
 
             console.log('@$@$@$@$', computeValue)
 
@@ -81,97 +82,51 @@ const MetaData = () => {
 
             console.log(leverageToken.toString())
         } catch (err) {
-            console.warn('Error rebalancing token asset:', err)
+            console.warn('Error MangoAccount token asset:', err)
 
         }
     }
 
 
     const rebalance = async () => {
-
         const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
-        console.log(mangoGroup)
         try {
             const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
-            const quoteTokenMint = new PublicKey(
-                'So11111111111111111111111111111111111111112',
-            )
             const leverageTokenIndex =
                 quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
-            const quoteTokenIndex = mangoGroup.getTokenIndex(quoteTokenMint)
-            const mangoAccountPk =
-                quasarGroup.leverageTokens[leverageTokenIndex].mangoAccount
+            const leverageToken = quasarGroup.leverageTokens[leverageTokenIndex]
+            const mangoAccountPk = leverageToken.mangoAccount
 
             const mangoAccount = await mangoClient.getMangoAccount(
                 mangoAccountPk,
                 serumProgramId,
             )
 
-            const leverageToken = await quasarClient.burnLeverageToken(
+            const perpMarket = mangoMarkets[
+                leverageToken.mangoPerpMarket.toBase58()
+            ]
+
+            const rebalanced = await quasarClient.rebalance(
                 quasarGroup.publicKey,
                 tokenMintPk,
-                new PublicKey('So11111111111111111111111111111111111111112'),
+                quasarGroup.signerKey,
                 mangoProgramId,
                 mangoGroup.publicKey,
                 mangoAccountPk,
                 wallet,
                 mangoGroup.mangoCache,
-                mangoGroup.tokens[quoteTokenIndex].rootBank,
-                mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBanks[0],
-                mangoGroup.rootBankAccounts[quoteTokenIndex].nodeBankAccounts[0].vault,
-                quasarGroup.signerKey,
-                mangoGroup.signerKey,
+                perpMarket.publicKey,
+                perpMarket.bids,
+                perpMarket.asks,
+                perpMarket.eventQueue,
                 mangoAccount.spotOpenOrders,
-
-                new BN(0.1),
             )
-            await sleep(1000)
-            rebalancing()
 
-            console.log(leverageToken.toString())
+            console.log(rebalanced)
         } catch (err) {
-            console.warn('Error burning leverage token:', err)
+            console.warn('Error rebalancing token asset:', err)
 
         }
-
-        // const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
-        // try {
-        //     const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
-        //     const leverageTokenIndex =
-        //         quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
-        //     const leverageToken = quasarGroup.leverageTokens[leverageTokenIndex]
-        //     const mangoAccountPk = leverageToken.mangoAccount
-
-        //     const mangoAccount = await mangoClient.getMangoAccount(
-        //         mangoAccountPk,
-        //         serumProgramId,
-        //     )
-
-        //     const perpMarket = mangoMarkets[
-        //         leverageToken.mangoPerpMarket.toBase58()
-        //     ]
-
-        //     await quasarClient.rebalance(
-        //         quasarGroup.publicKey,
-        //         tokenMintPk,
-        //         quasarGroup.signerKey,
-        //         mangoProgramId,
-        //         mangoGroup.publicKey,
-        //         mangoAccountPk,
-        //         wallet,
-        //         mangoGroup.mangoCache,
-        //         perpMarket.publicKey,
-        //         perpMarket.bids,
-        //         perpMarket.asks,
-        //         perpMarket.eventQueue,
-        //         mangoAccount.spotOpenOrders,
-        //     )
-
-        //     console.log(leverageToken.toString())
-        // } catch (err) {
-        //     console.warn('Error rebalancing token asset:', err)
-
-        // }
     }
 
     React.useEffect(() => {
@@ -238,6 +193,9 @@ const MetaData = () => {
         <Container>
             <RowTitle marginBottom={'40px'}>
                 <StyleText fontSize={'44px'} fontWeight={'700'} text={'3X Long Solana Token'} />
+                <Button
+                    padding={'22px 56px'} margin={'0px 28px 0px 0px'} text={'MangoData'} onClick={getQuasarMangoData}></Button>
+
                 <Button
                     padding={'22px 56px'} margin={'0px 28px 0px 0px'} text={'Rebalancing'} onClick={rebalance}></Button>
             </RowTitle>
