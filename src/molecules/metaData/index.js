@@ -250,9 +250,14 @@ const MetaData = () => {
                         color={'grey'}
                         margin={'0px 0px 10px 0px'}
                     />
-                    <StyleText fontSize={'16px'}
-                        fontWeight={'600'}
-                        text={'3.0'} />
+                    <FlexibleRow>
+                        <StyleText fontSize={'16px'}
+                                   fontWeight={'600'}
+                                   text={'3.0'} />
+                        <StyleText fontSize={'16px'}
+                                   fontWeight={'700'}
+                                   text={'X'} />
+                    </FlexibleRow>
                 </Row>
                 <Row marginBottom={'20px'}>
                     <StyleText fontSize={'16px'}
@@ -261,9 +266,14 @@ const MetaData = () => {
                         color={'grey'}
                         margin={'0px 0px 10px 0px'}
                     />
-                    <StyleText fontSize={'16px'}
-                        fontWeight={'600'}
-                        text={leverage} />
+                    <FlexibleRow>
+                        <StyleText fontSize={'16px'}
+                                   fontWeight={'600'}
+                                   text={leverage} />
+                        <StyleText fontSize={'16px'}
+                                   fontWeight={'700'}
+                                   text={'X'} />
+                    </FlexibleRow>
                 </Row>
                 <Row marginBottom={'20px'}>
                     <StyleText fontSize={'16px'}
@@ -272,17 +282,15 @@ const MetaData = () => {
                         text={'Tokens Outstanding: '}
                         color={'grey'}
                     />
-                    <Column>
-                        <Row>
-                            <StyleText fontSize={'16px'}
-                                fontWeight={'600'}
-                                margin={'0 12px 0 0'}
-                                text={`${outstanding}`} />
-                            <StyleText fontSize={'16px'}
-                                fontWeight={'600'}
-                                text={`3QLSOL`} />
-                        </Row>
-                    </Column>
+                    <FlexibleRow>
+                        <StyleText fontSize={'16px'}
+                                   fontWeight={'600'}
+                                   margin={'0 12px 0 0'}
+                                   text={`${outstanding}`} />
+                        <StyleText fontSize={'16px'}
+                                   fontWeight={'600'}
+                                   text={`3QLSOL`} />
+                    </FlexibleRow>
                 </Row>
                 <Row marginBottom={"20px"}>
                     <StyleText fontSize={'16px'}
@@ -290,17 +298,16 @@ const MetaData = () => {
                         text={'Total Fund Value: '}
                         margin={'0px 0px 10px 0px'}
                         color={'grey'}
-                    /><Column>
-                        <Row>
-                            <StyleText fontSize={'16px'}
-                                fontWeight={'600'}
-                                margin={'0 12px 0 0'}
-                                text={`${totalFund}`} />
-                            <StyleText fontSize={'16px'}
-                                fontWeight={'600'}
-                                text={`USDT`} />
-                        </Row>
-                    </Column>
+                    />
+                    <FlexibleRow>
+                        <StyleText fontSize={'16px'}
+                                   fontWeight={'600'}
+                                   margin={'0 12px 0 0'}
+                                   text={`${totalFund}`} />
+                        <StyleText fontSize={'16px'}
+                                   fontWeight={'600'}
+                                   text={`USDT`} />
+                    </FlexibleRow>
                 </Row>
                 <Row marginBottom={"20px"}>
                     <StyleText fontSize={'16px'}
@@ -310,7 +317,7 @@ const MetaData = () => {
                         color={'grey'}
                     />
                     <Column>
-                        <Row>
+                        <FlexibleRow>
                             <StyleText fontSize={'16px'}
                                 fontWeight={'600'}
                                 margin={'0 12px 0 0'}
@@ -318,8 +325,8 @@ const MetaData = () => {
                             <StyleText fontSize={'16px'}
                                 fontWeight={'600'}
                                 text={`SOL-PERP`} />
-                        </Row>
-                        <Row>
+                        </FlexibleRow>
+                        <FlexibleRow>
                             <StyleText fontSize={'16px'}
                                 fontWeight={'600'}
                                 margin={'0 12px 0 0'}
@@ -327,7 +334,7 @@ const MetaData = () => {
                             <StyleText fontSize={'16px'}
                                 fontWeight={'600'}
                                 text={`USDT`} />
-                        </Row>
+                        </FlexibleRow>
                     </Column>
                 </Row>
                 <Row>
@@ -343,6 +350,10 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   color: #ffffff;
+  
+  @media only screen and (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const Block = styled.div`
@@ -353,6 +364,24 @@ const Block = styled.div`
   border-radius: 20px;
   align-items: flex-start;
   background-color: hsla(0, 0%, 100%, 0.06);
+  
+  @media only screen and (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const FlexibleRow = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: ${props => props.marginBottom};
+  
+  @media only screen and (max-width: 768px) {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
 `;
 
 const Row = styled.div`
@@ -381,6 +410,10 @@ const RowTitle = styled.div`
   
   @media only screen and (max-width: 768px) {
     margin-bottom: ${props => props.marginBottom};
+    
+    display: flex;
+    flex-direction: column;
+    width: 100%;
   }
 `;
 
@@ -390,6 +423,10 @@ const Column = styled.div`
   justify-content: flex-start;
   align-items: left;
   margin-top: ${props => props.marginTop};
+  
+  @media only screen and (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const TokenName = styled.div`

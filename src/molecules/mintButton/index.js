@@ -362,7 +362,7 @@ const MintButton = () => {
                 </Row>
                 <Row>
                     <Button text={'Mint sSOL x3 for USDT'}
-                        // onClick={mintLeverageToken}
+                        // onClick={mintLevqerageToken}
                         onClick={openModal}
                         padding={'22px 56px'}
                         margin={'0px 28px 0px 0px'} />
