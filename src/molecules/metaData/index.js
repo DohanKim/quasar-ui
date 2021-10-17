@@ -237,9 +237,10 @@ const MetaData = () => {
     return (
         <Container>
             <RowTitle marginBottom={'40px'}>
-                <StyleText fontSize={'44px'} fontWeight={'700'} text={'3X Long Solana Token'} />
-                <Button
-                    padding={'22px 56px'} margin={'0px 28px 0px 0px'} text={'Rebalancing'} onClick={rebalance}></Button>
+                <StyleText fontSize={'44px'}
+                           mobileFontSize={'30px'}
+                           fontWeight={'700'}
+                           text={'3X Long Solana Token'} />
             </RowTitle>
             <Block>
                 <Row marginBottom={'20px'}>
@@ -247,6 +248,7 @@ const MetaData = () => {
                         fontWeight={'600'}
                         text={'Target Leverage: '}
                         color={'grey'}
+                        margin={'0px 0px 10px 0px'}
                     />
                     <StyleText fontSize={'16px'}
                         fontWeight={'600'}
@@ -257,6 +259,7 @@ const MetaData = () => {
                         fontWeight={'600'}
                         text={'Current Leverage: '}
                         color={'grey'}
+                        margin={'0px 0px 10px 0px'}
                     />
                     <StyleText fontSize={'16px'}
                         fontWeight={'600'}
@@ -265,6 +268,7 @@ const MetaData = () => {
                 <Row marginBottom={'20px'}>
                     <StyleText fontSize={'16px'}
                         fontWeight={'600'}
+                        margin={'0px 0px 10px 0px'}
                         text={'Tokens Outstanding: '}
                         color={'grey'}
                     />
@@ -280,11 +284,11 @@ const MetaData = () => {
                         </Row>
                     </Column>
                 </Row>
-
-                <Row >
+                <Row marginBottom={"20px"}>
                     <StyleText fontSize={'16px'}
                         fontWeight={'600'}
                         text={'Total Fund Value: '}
+                        margin={'0px 0px 10px 0px'}
                         color={'grey'}
                     /><Column>
                         <Row>
@@ -298,13 +302,14 @@ const MetaData = () => {
                         </Row>
                     </Column>
                 </Row>
-                <Row >
+                <Row marginBottom={"20px"}>
                     <StyleText fontSize={'16px'}
                         fontWeight={'600'}
                         text={'Basket: '}
+                        margin={'0px 0px 10px 0px'}
                         color={'grey'}
                     />
-                    <Column marginTop={'18px'}>
+                    <Column>
                         <Row>
                             <StyleText fontSize={'16px'}
                                 fontWeight={'600'}
@@ -324,6 +329,10 @@ const MetaData = () => {
                                 text={`USDT`} />
                         </Row>
                     </Column>
+                </Row>
+                <Row>
+                    <Button
+                      padding={'22px 56px'} margin={'0px 28px 0px 0px'} text={'Rebalancing'} onClick={rebalancing} />
                 </Row>
             </Block>
         </Container>
@@ -354,6 +363,12 @@ const Row = styled.div`
   margin-bottom: ${props => props.marginBottom};
   width:100%;
   max-width: 480px;
+  
+  @media only screen and (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 const RowTitle = styled.div`
   display: flex;
@@ -363,6 +378,10 @@ const RowTitle = styled.div`
   margin-bottom: ${props => props.marginBottom};
   width:100%;
   max-width: 740px;
+  
+  @media only screen and (max-width: 768px) {
+    margin-bottom: ${props => props.marginBottom};
+  }
 `;
 
 const Column = styled.div`

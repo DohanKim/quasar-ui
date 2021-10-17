@@ -16,6 +16,10 @@ const Container = styled.div`
   color: white;
   font-size: 18px;
   font-weight: 600;
+  
+  @media only screen and (max-width: 768px) {
+    margin-top: 10px;
+  }
 `;
 
 export default Tag;

@@ -343,17 +343,19 @@ const MintButton = () => {
                 </Modal>
             }
             <Row marginBottom={'40px'}>
-                <StyleText fontSize={'44px'} fontWeight={'700'} text={'Mint Tokens'} />
+                <StyleText fontSize={'44px'} mobileFontSize={'30px'} fontWeight={'700'} text={'Mint Tokens'} />
             </Row>
             <Block>
                 <Row marginBottom={'20px'}>
                     <StyleText fontSize={'40px'}
+                        mobileFontSize={'28px'}
                         fontWeight={'700'}
-                        text={'sSOL x3 Token'} />
+                        text={'3X Long Solana Token'} />
                 </Row>
                 <Row marginBottom={'40px'}>
                     <StyleText fontSize={'30px'}
-                        margin={"0 20px 0 0"}
+                        margin={"0px 20px 0px 0px"}
+                        mobileFontSize={'24px'}
                         fontWeight={'500'}
                         text={'$ 230.24'} />
                     <Tag color={'#46BD77'} text={'+ 10%'} />
@@ -362,8 +364,12 @@ const MintButton = () => {
                     <Button text={'Mint sSOL x3 for USDT'}
                         // onClick={mintLeverageToken}
                         onClick={openModal}
-                        padding={'22px 56px'} margin={'0px 28px 0px 0px'} />
-                    <GreyButton onClick={burnLeverageToken} text={'Burn'} padding={'22px 56px'} />
+                        padding={'22px 56px'}
+                        margin={'0px 28px 0px 0px'} />
+                    <Margin mobileMarginBottom={'20px'}/>
+                    <GreyButton onClick={openRedeemModal}
+                                text={'Burn'}
+                                padding={'22px 56px'} />
                 </Row>
             </Block>
         </Container>
@@ -391,7 +397,14 @@ const Row = styled.div`
   flex-direction: row;
   justify-content: ${props => props.justifyContent};
   align-items: center;
+  align-content: center;
   margin-bottom: ${props => props.marginBottom};
+  
+  @media only screen and (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
 `;
 
 const ModalTitle = styled.div`
@@ -424,5 +437,12 @@ const TokenIcon = styled.div`
   margin-right: 20px;
 `;
 
+const Margin = styled.div`
+  margin-bottom: ${props => props.marginBottom};
+  
+  @media only screen and (max-width: 768px) {
+    margin-bottom: ${props => props.mobileMarginBottom};
+  }
+`;
 
 export default MintButton
