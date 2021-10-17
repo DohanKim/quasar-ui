@@ -117,6 +117,15 @@ interface QuasarStore extends State {
     }
     cache: MangoCache | null
   }
+  selectedMarket: {
+    config: MarketConfig
+    current: Market | PerpMarket | null
+    markPrice: number
+    kind: string
+    askInfo: AccountInfo<Buffer> | null
+    bidInfo: AccountInfo<Buffer> | null
+    fills: any[]
+  }
   wallet: {
     providerUrl: string
     connected: boolean
