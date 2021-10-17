@@ -48,3 +48,7 @@ export const formatUsdValue = (value) => {
       : 4
   return usdFormatter(value, precision)
 }
+
+export function isDefined<T>(argument: T | undefined): argument is T {
+  return argument !== undefined
+}

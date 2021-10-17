@@ -33,6 +33,7 @@ const MetaData = () => {
     const mangoMarkets = useQuasarStore((s) => s.selectedMangoGroup.markets)
     const connection = useQuasarStore((s) => s.connection.current)
     const mangoCache = useQuasarStore((s) => s.selectedMangoGroup.cache)
+    const mangoAccount = useQuasarStore((s) => s.selectedMangoAccount.current)
 
     const perpPrice = useOraclePrice()
 
@@ -82,34 +83,24 @@ const MetaData = () => {
             ]
 
             const baseLot = perpMarket.baseLotSize
-            const basePosition = perpMarket.baseDecimals
 
             const perpAccount = mangoAccount.perpAccounts[1]
             console.log(mangoAccount.perpAccounts, perpAccount.basePosition.toString(), perpAccount.takerBase.toString())
 
+            const basePosition = parseFloat(perpAccount.basePosition.toString())
+
+            const nav = basePosition * baseLot * perpPrice
+
+            console.log('**&&**&&**', nav)
+
             const computeValue = await mangoAccount.computeValue(mangoGroup, mangoCache)
+            setOutstanding(perpAccount.basePosition.toString())
+            setTotalFund(computeValue.toFixed(2))
             const accountLeverage = await mangoAccount.getLeverage(mangoGroup, mangoCache)
 
+            setLeverage(accountLeverage.toFixed(2))
+
             console.log('@$@$@$@$', { basePosition: perpAccount.basePosition.toString(), leverage: accountLeverage.toString(), computeValue: formatUsdValue(computeValue), baseLot: (baseLot).toString(), SolPerpPrice: formatUsdValue(perpPrice) })
-
-            // await quasarClient.rebalance(
-            //     quasarGroup.publicKey,
-            //     tokenMintPk,
-            //     quasarGroup.signerKey,
-            //     mangoProgramId,
-            //     mangoGroup.publicKey,
-            //     mangoAccountPk,
-            //     wallet,
-            //     mangoGroup.mangoCache,
-            //     perpMarket.publicKey,
-            //     perpMarket.bids,
-            //     perpMarket.asks,
-            //     perpMarket.eventQueue,
-            //     mangoAccount.spotOpenOrders,
-            // )
-
-
-
 
             console.log(leverageToken.toString())
         } catch (err) {
@@ -122,7 +113,7 @@ const MetaData = () => {
     const rebalance = async () => {
         const quasarGroup = await quasarClient.getQuasarGroup(new PublicKey('4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo'))
         try {
-            const tokenMintPk = new PublicKey(quasarGroup.leverageTokens[0].mint)
+            const tokenMintPk = new PublicKey('9gx8Cot1DvYCzq5xA9V5or5R7USFXvEbESw337hNEipJ')
             const leverageTokenIndex =
                 quasarGroup.getLeverageTokenIndexByMint(tokenMintPk)
             const leverageToken = quasarGroup.leverageTokens[leverageTokenIndex]
