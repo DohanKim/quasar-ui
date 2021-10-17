@@ -33,7 +33,6 @@ const MetaData = () => {
     const mangoMarkets = useQuasarStore((s) => s.selectedMangoGroup.markets)
     const connection = useQuasarStore((s) => s.connection.current)
     const mangoCache = useQuasarStore((s) => s.selectedMangoGroup.cache)
-    const mangoAccount = useQuasarStore((s) => s.selectedMangoAccount.current)
 
     const perpPrice = useOraclePrice()
 
@@ -101,6 +100,8 @@ const MetaData = () => {
             setLeverage(accountLeverage.toFixed(2))
 
             console.log('@$@$@$@$', { basePosition: perpAccount.basePosition.toString(), leverage: accountLeverage.toString(), computeValue: formatUsdValue(computeValue), baseLot: (baseLot).toString(), SolPerpPrice: formatUsdValue(perpPrice) })
+
+
 
             console.log(leverageToken.toString())
         } catch (err) {
@@ -202,6 +203,7 @@ const MetaData = () => {
                     mobileFontSize={'30px'}
                     fontWeight={'700'}
                     text={'3X Long Solana Token'} />
+
                 <Button
                     padding={'22px 56px'} margin={'0px 28px 0px 0px'} text={'MangoData'} onClick={getQuasarMangoData}></Button>
 
