@@ -1,15 +1,20 @@
 import { Connection, PublicKey } from '@solana/web3.js'
 import { Big } from 'big.js'
 import BN from 'bn.js'
-import { I80F48, ONE_I80F48 } from '@blockworks-foundation/mango-client'
+import {
+  getTokenByMint,
+  GroupConfig,
+  I80F48,
+  ONE_I80F48,
+} from '@blockworks-foundation/mango-client'
 import {
   MetaData,
   BaseToken,
-  LeverageToken,
   MAX_BASE_TOKENS,
   MAX_LEVERAGE_TOKENS,
 } from './layout'
 import { zeroKey } from './utils'
+import LeverageToken from './LeverageToken'
 
 export default class QuasarGroup {
   publicKey: PublicKey

@@ -17,6 +17,7 @@ import { PublicKey } from '@solana/web3.js'
 import { I80F48 } from '@blockworks-foundation/mango-client'
 import BN from 'bn.js'
 import { zeroKey } from './utils'
+import LeverageToken from './LeverageToken'
 
 export const MAX_BASE_TOKENS = 16
 export const MAX_LEVERAGE_TOKENS = 32
@@ -287,22 +288,6 @@ export class BaseTokenLayout extends Structure {
 
 export function baseTokenLayout(property = '') {
   return new BaseTokenLayout(property)
-}
-
-export class LeverageToken {
-  mint!: PublicKey
-  baseTokenMint!: PublicKey
-  targetLeverage!: I80F48
-  mangoAccount!: PublicKey
-  mangoPerpMarket!: PublicKey
-  padding!: number[]
-
-  constructor(decoded: any) {
-    Object.assign(this, decoded)
-  }
-  isEmpty(): boolean {
-    return this.mint.equals(zeroKey)
-  }
 }
 
 export class LeverageTokenLayout extends Structure {

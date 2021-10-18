@@ -1,10 +1,11 @@
 import TopBar from './components/TopBar'
-import Home from './components/Home'
 import Admin from './components/Admin'
 import Notifications from './components/Notification'
 import useWallet from './hooks/useWallet'
 import { BrowserRouter, Route } from 'react-router-dom'
 import useHydrateStore from './hooks/useHydrateStore'
+import TokenList from './components/TokenList'
+import LeverageTokenInfo from './components/LeverageTokenInfo'
 
 function App() {
   useWallet()
@@ -16,7 +17,9 @@ function App() {
         <Notifications />
         <TopBar />
         <>
-          <Route exact path="/" component={Home} />
+          <Route exact path="/" component={TokenList} />
+          <Route exact path="/tokens" component={TokenList} />
+          <Route path="/tokens/:tokenMint" component={LeverageTokenInfo} />
           <Route path="/admin" component={Admin} />
         </>
       </BrowserRouter>
