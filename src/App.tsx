@@ -19,6 +19,8 @@ import styled, { keyframes } from 'styled-components'
 import Main from './main'
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 
+import Notifications from '../src/bu-components/Notification'
+
 const wallets = [
   /* view list of available wallets at https://github.com/solana-labs/wallet-adapter#wallets */
   getPhantomWallet(),
@@ -90,6 +92,7 @@ function App(): any {
   return (
     <Container>
       <Header isWalletConnected={wallet.connected} wallet={wallet} />
+      <Notifications />
       <Main />
       <Animation>
         <Color1 />

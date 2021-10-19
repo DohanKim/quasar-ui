@@ -17,6 +17,13 @@ const Container = styled.div`
   margin: ${props => props.margin};
   border-radius: 1000px;
   cursor: pointer;
+  
+  @media only screen and (max-width: 768px) {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
 `;
 
 export default GreyButton;

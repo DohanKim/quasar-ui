@@ -21,6 +21,7 @@ import {
   getTokenAccountsByOwnerWithWrappedSol,
   getTokenByMint,
   nativeToUi,
+  MangoAccount,
 } from '@blockworks-foundation/mango-client'
 import { Market } from '@project-serum/serum'
 import { notify } from '../utils/notifications'
@@ -117,6 +118,10 @@ interface QuasarStore extends State {
     }
     cache: MangoCache | null
   }
+  selectedMangoAccount: {
+    current: MangoAccount | null
+    initialLoad: boolean
+  }
   selectedMarket: {
     config: MarketConfig
     current: Market | PerpMarket | null
@@ -164,10 +169,15 @@ const useQuasarStore = create<QuasarStore>((set, get) => {
       rootBanks: [],
       cache: null,
     },
+    selectedMangoAccount: {
+      current: null,
+      initialLoad: true,
+    },
+    mangoAccounts: [],
     selectedMarket: {
       config: getMarketByBaseSymbolAndKind(
         DEFAULT_MANGO_GROUP_CONFIG,
-        'BTC',
+        'SOL',
         'perp',
       ) as MarketConfig,
       kind: 'perp',
@@ -230,6 +240,55 @@ const useQuasarStore = create<QuasarStore>((set, get) => {
               type: 'error',
             })
             console.log('Could not get quasar group: ', err)
+          })
+      },
+      async fetchAllMangoAccounts() {
+        const set = get().set
+        const mangoGroup = get().selectedMangoGroup.current
+        const mangoClient = get().connection.mangoClient
+        const quasarPk = new PublicKey(
+          '4G5bLXpLCZXJjrT6SQwhjQkXzKYKAEQ12TsiCt52tTmo',
+        )
+
+        if (!quasarGroupPk) return
+        return mangoClient
+          .getMangoAccountsForOwner(mangoGroup, quasarGroupPk, true)
+          .then((mangoAccounts) => {
+            console.log('******', mangoAccounts)
+            if (mangoAccounts.length > 0) {
+              const sortedAccounts = mangoAccounts
+                .slice()
+                .sort((a, b) =>
+                  a.publicKey.toBase58() > b.publicKey.toBase58() ? 1 : -1,
+                )
+
+              set((state) => {
+                state.selectedMangoAccount.initialLoad = false
+                state.mangoAccounts = sortedAccounts
+                if (!state.selectedMangoAccount.current) {
+                  const lastAccount = localStorage.getItem(
+                    'lastAccountViewed-3.0',
+                  )
+                  state.selectedMangoAccount.current =
+                    mangoAccounts.find(
+                      (ma) =>
+                        ma.publicKey.toString() === JSON.parse(lastAccount),
+                    ) || sortedAccounts[0]
+                }
+              })
+            } else {
+              set((state) => {
+                state.selectedMangoAccount.initialLoad = false
+              })
+            }
+          })
+          .catch((err) => {
+            notify({
+              type: 'error',
+              title: 'Unable to load mango account',
+              description: err.message,
+            })
+            console.log('Could not get margin accounts for wallet', err)
           })
       },
       async fetchMangoGroup() {

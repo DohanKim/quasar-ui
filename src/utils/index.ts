@@ -1,3 +1,7 @@
+import {
+  getTokenByMint,
+  GroupConfig,
+} from '@blockworks-foundation/mango-client'
 import { PublicKey } from '@solana/web3.js'
 
 export const copyToClipboard = (copyThis) => {
@@ -47,4 +51,8 @@ export const formatUsdValue = (value) => {
       ? 0
       : 4
   return usdFormatter(value, precision)
+}
+
+export function isDefined<T>(argument: T | undefined): argument is T {
+  return argument !== undefined
 }
