@@ -12,13 +12,13 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
 
-const MintLeverageTokenForm = () => {
+const MintLeverageTokenForm = (props) => {
+  const tokenMint = props.tokenMint
   const quasarClient = useQuasarStore((s) => s.connection.client)
   const quasarGroup = useQuasarStore((s) => s.quasarGroup)
   const mangoGroup = useQuasarStore((s) => s.selectedMangoGroup.current)
   const connection = useQuasarStore((s) => s.connection.current)
 
-  const [tokenMint, setTokenMint] = useState('')
   const [quantity, setQuantity] = useState('')
 
   const handleTextChange =
@@ -70,16 +70,6 @@ const MintLeverageTokenForm = () => {
   return (
     <>
       <div className="m-4">
-        <div>
-          <label>token mint</label>
-          <input
-            className={`border`}
-            type="text"
-            name="tokenMint"
-            value={tokenMint}
-            onChange={handleTextChange(setTokenMint)}
-          />
-        </div>
         <div>
           <label>quantity</label>
           <input

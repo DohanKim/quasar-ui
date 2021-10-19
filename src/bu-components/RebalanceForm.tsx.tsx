@@ -17,15 +17,14 @@ import {
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token'
 
-const RebalanceForm = () => {
+const RebalanceForm = (props) => {
+  const tokenMint = props.tokenMint
   const quasarClient = useQuasarStore((s) => s.connection.client)
   const mangoClient = useQuasarStore((s) => s.connection.mangoClient)
   const quasarGroup = useQuasarStore((s) => s.quasarGroup)
   const mangoGroup = useQuasarStore((s) => s.selectedMangoGroup.current)
   const mangoMarkets = useQuasarStore((s) => s.selectedMangoGroup.markets)
   const connection = useQuasarStore((s) => s.connection.current)
-
-  const [tokenMint, setTokenMint] = useState('')
 
   const handleTextChange =
     (setFn) =>
@@ -84,16 +83,6 @@ const RebalanceForm = () => {
   return (
     <>
       <div className="m-4">
-        <div>
-          <label>token mint</label>
-          <input
-            className={`border`}
-            type="text"
-            name="tokenMint"
-            value={tokenMint}
-            onChange={handleTextChange(setTokenMint)}
-          />
-        </div>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={() => rebalance()}

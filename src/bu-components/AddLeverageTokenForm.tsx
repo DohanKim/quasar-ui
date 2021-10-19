@@ -33,7 +33,7 @@ const AddLeverageTokenForm = () => {
         new PublicKey(mangoPerpMarket),
         wallet,
         quasarGroup.signerKey,
-        new I80F48(new BN(targetLeverage)),
+        I80F48.fromString(targetLeverage),
       )
       notify({
         title: 'leverage token added',
