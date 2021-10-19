@@ -3,6 +3,7 @@ import styled, { keyframes } from "styled-components";
 import Mint from "./molecules/mint";
 import MetaData from "./molecules/metaData";
 import MintButton from "./molecules/mintButton";
+import TokenList from "./components/TokenList";
 
 const Main = () => {
     return (

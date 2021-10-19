@@ -16,10 +16,10 @@ const TokenList = () => {
             } else {
               return (
                 <div key={token.mint.toString()}>
-                  <Link to={`/tokens/${token.mint.toString()}`}>
+                  <div>
                     {token.getBaseSymbol(mangoGroup.config)} x
                     {token.targetLeverage.toString()}
-                  </Link>
+                  </div>
                 </div>
               )
             }

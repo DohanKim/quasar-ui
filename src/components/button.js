@@ -46,6 +46,11 @@ const Inner = styled.div`
   border: 0;
   text-decoration: none;
   cursor: pointer;
+
+  @media only screen and (max-width: 768px) {
+        padding: 16px;
+        margin: 0;
+    }
 `;
 
 export default Button;

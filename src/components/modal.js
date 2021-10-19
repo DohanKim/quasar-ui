@@ -3,14 +3,16 @@ import PropTypes from 'prop-types';
 import styled from 'styled-components';
 import Close from "./close";
 
-const Modal = ({ className,
-                 visible,
-                 children,
-                 onClose,
-                 width,
-                 height,
-                 maskClosable,
-                 closable}) => {
+const Modal = ({
+  className,
+  visible,
+  children,
+  onClose,
+  width,
+  height,
+  maskClosable,
+  closable
+}) => {
   const onMaskClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose(e);
@@ -29,9 +31,9 @@ const Modal = ({ className,
         <ModalInner tabIndex="0" className="modal-inner" width={width} height={height}>
           {/*{closable && <button className="modal-close" onClick={close} />}*/}
           <Right>
-            { closable && <Close onClick={close} />}
+            {closable && <Close onClick={close} />}
           </Right>
-          { children }
+          {children}
         </ModalInner>
       </ModalWrapper>
     </>

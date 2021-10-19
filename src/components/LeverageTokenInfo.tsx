@@ -12,13 +12,17 @@ import { useEffect, useState } from 'react'
 import BN from 'bn.js'
 import { LeverageToken } from '../client'
 import useQuasarStore, { serumProgramId } from '../stores/useQuasarStore'
-import BurnLeverageTokenForm from './BurnLeverageTokenForm'
-import MintLeverageTokenForm from './MintLeverageTokenForm'
-import RebalanceForm from './RebalanceForm.tsx'
+import BurnLeverageTokenForm from '../bu-components/BurnLeverageTokenForm'
+import MintLeverageTokenForm from '../bu-components/MintLeverageTokenForm'
+import RebalanceForm from '../bu-components/RebalanceForm.tsx'
 import useInterval from '../hooks/useInterval'
+import { formatUsdValue } from '../utils'
+import { LEVERAGE_TOKEN } from '../constants'
 
 const LeverageTokenInfo = ({ match }) => {
-  const { tokenMint } = match.params
+  const { tokenMint } = {
+    tokenMint: LEVERAGE_TOKEN.BTC.TRIPLE,
+  }
 
   const quasarClient = useQuasarStore((s) => s.connection.client)
   const mangoClient = useQuasarStore((s) => s.connection.mangoClient)
@@ -83,7 +87,7 @@ const LeverageTokenInfo = ({ match }) => {
     )
     const mintInfo = await tokenMintAccount.getMintInfo()
     const outstanding = mintInfo.supply
-    setOutstanding(mintInfo.supply.toString())
+    setOutstanding(parseFloat(mintInfo.supply.toString()).toFixed(2))
 
     const basePosition = perpAccount.basePosition
     const basketPerp = nativeToUi(
@@ -93,7 +97,7 @@ const LeverageTokenInfo = ({ match }) => {
         .toNumber(),
       perpMarket.baseDecimals,
     )
-    setBasketPerp(basketPerp.toString())
+    setBasketPerp(parseFloat(basketPerp.toString()).toFixed(4))
 
     let spotAssetsVal = ZERO_I80F48
     spotAssetsVal = spotAssetsVal.add(
@@ -114,22 +118,22 @@ const LeverageTokenInfo = ({ match }) => {
       )
       spotAssetsVal = spotAssetsVal.add(spotVal)
     }
-    setCollateralValue(spotAssetsVal.toString())
+    setCollateralValue(formatUsdValue(spotAssetsVal))
 
     const nav = await mangoAccount.computeValue(mangoGroup, mangoCache)
-    setTotalFundValue(nav.toString())
+    setTotalFundValue(formatUsdValue(nav))
 
     const basketValue = nav.div(I80F48.fromString(outstanding.toString()))
-    setBasketValue(basketValue.toString())
+    setBasketValue(formatUsdValue(basketValue))
 
     const tokenPrice = nav.div(I80F48.fromString(outstanding.toString()))
-    setTokenPrice(tokenPrice.toString())
+    setTokenPrice(formatUsdValue(tokenPrice))
 
     const price = mangoCache.priceCache[perpMarketIndex].price
-    setBaseTokenPrice(price.toString())
+    setBaseTokenPrice(formatUsdValue(price))
 
     setBasketQuote(
-      basketValue.sub(price.mul(I80F48.fromNumber(basketPerp))).toString(),
+      formatUsdValue(basketValue.sub(price.mul(I80F48.fromNumber(basketPerp)))),
     )
 
     const exposure = price.mul(
@@ -140,11 +144,11 @@ const LeverageTokenInfo = ({ match }) => {
         ),
       ),
     )
-    setEffectiveLeverage(exposure.div(nav).toString())
+    setEffectiveLeverage(parseFloat(exposure.div(nav).toString()).toFixed(2))
   }
 
   fetchTokenData()
-  useInterval(fetchTokenData, 3 * 1000)
+  useInterval(fetchTokenData, 8 * 1000)
 
   return (
     <>
