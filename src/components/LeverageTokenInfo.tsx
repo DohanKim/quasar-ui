@@ -17,9 +17,8 @@ import MintLeverageTokenForm from './MintLeverageTokenForm'
 import RebalanceForm from './RebalanceForm.tsx'
 import useInterval from '../hooks/useInterval'
 
-const LeverageTokenInfo = ({ match }) => {
-  const { tokenMint } = match.params
-
+const LeverageTokenInfo = (props) => {
+  const { tokenMint } = props
   const quasarClient = useQuasarStore((s) => s.connection.client)
   const mangoClient = useQuasarStore((s) => s.connection.mangoClient)
   const quasarGroup = useQuasarStore((s) => s.quasarGroup)
@@ -148,34 +147,29 @@ const LeverageTokenInfo = ({ match }) => {
 
   return (
     <>
-      <div>
-        {token == null ? null : (
-          <>
+      {token == null ? null : (
+        <>
+          <div>
+            {token.getBaseSymbol(mangoConfig)} x
+            {token.targetLeverage.toString()}
+          </div>
+          <div>
+            <div>Token price: {tokenPrice}</div>
             <div>
-              {token.getBaseSymbol(mangoConfig)} x
-              {token.targetLeverage.toString()}
+              {token.getBaseSymbol(mangoConfig)} Token price: {baseTokenPrice}
             </div>
+            <div>Current Leverage: {effectiveLeverage}</div>
+            <div>Tokens Outstanding: {outstanding}</div>
             <div>
-              <div>Token price: {tokenPrice}</div>
-              <div>
-                {token.getBaseSymbol(mangoConfig)} Token price: {baseTokenPrice}
-              </div>
-              <div>Current Leverage: {effectiveLeverage}</div>
-              <div>Tokens Outstanding: {outstanding}</div>
-              <div>
-                Basket: {basketPerp} {token.getBaseSymbol(mangoConfig)}-PERP |{' '}
-                {basketQuote} USDC
-              </div>
-              <div>Basket Value: {basketValue}</div>
-              <div>Total Fund Value: {totalFundValue}</div>
-              <div>Total Collateral Value: {totalCollateralValue}</div>
+              Basket: {basketPerp} {token.getBaseSymbol(mangoConfig)}-PERP |{' '}
+              {basketQuote} USDC
             </div>
-          </>
-        )}
-        <MintLeverageTokenForm tokenMint={tokenMint} />
-        <BurnLeverageTokenForm tokenMint={tokenMint} />
-        <RebalanceForm tokenMint={tokenMint} />
-      </div>
+            <div>Basket Value: {basketValue}</div>
+            <div>Total Fund Value: {totalFundValue}</div>
+            <div>Total Collateral Value: {totalCollateralValue}</div>
+          </div>
+        </>
+      )}
     </>
   )
 }

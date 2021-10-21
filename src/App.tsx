@@ -5,7 +5,7 @@ import useWallet from './hooks/useWallet'
 import { BrowserRouter, Route } from 'react-router-dom'
 import useHydrateStore from './hooks/useHydrateStore'
 import TokenList from './components/TokenList'
-import LeverageTokenInfo from './components/LeverageTokenInfo'
+import LeverageTokenDetail from './components/LeverageTokenDetail'
 
 function App() {
   useWallet()
@@ -19,7 +19,7 @@ function App() {
         <>
           <Route exact path="/" component={TokenList} />
           <Route exact path="/tokens" component={TokenList} />
-          <Route path="/tokens/:tokenMint" component={LeverageTokenInfo} />
+          <Route path="/tokens/:tokenMint" component={LeverageTokenDetail} />
           <Route path="/admin" component={Admin} />
         </>
       </BrowserRouter>
