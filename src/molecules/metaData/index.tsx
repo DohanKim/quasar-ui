@@ -51,10 +51,6 @@ const MetaData = () => {
   const [tokenPrice, setTokenPrice] = useState('0')
 
   useEffect(() => {
-    fetchTokenData()
-  }, [])
-
-  useEffect(() => {
     if (quasarGroup) {
       const tokenIndex = quasarGroup.getLeverageTokenIndexByMint(
         new PublicKey(tokenMint),
@@ -199,6 +195,7 @@ const MetaData = () => {
     }
   }
 
+  fetchTokenData()
   useInterval(fetchTokenData, 8 * 1000)
 
   return (
